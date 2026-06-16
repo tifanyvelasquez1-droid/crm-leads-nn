@@ -806,8 +806,27 @@ const ENCS=['Tifany'];
 const KAMS=['Raul Izquierdo','Ximena Cerdán','Delia Vasquez','Walter Patiño'];
 const EVENTOS=['Inbound','Outbound','SAP','Campaña'];
 let campanas=[];
+let eventosC=[];
+let _editEventoId=null;
 const STATUS_OPTIONS=['ABIERTO','HOLD','REJECT'];
 const COND_OPTS=['PRICO','Agente de Retención','Agente de Percepción','Buen Contribuyente','Regular','Otro'];
+
+const TAG_COLORS=[
+  {bg:'#fce8e8',tx:'#9e1b00',name:'Rojo'},{bg:'#fff3e0',tx:'#7c4a00',name:'Naranja'},
+  {bg:'#fffde7',tx:'#6b5000',name:'Amarillo'},{bg:'#e8f5e9',tx:'#1b5e20',name:'Verde'},
+  {bg:'#e3f2fd',tx:'#0d47a1',name:'Azul'},{bg:'#f3e5f5',tx:'#4a148c',name:'Morado'},
+  {bg:'#fce4ec',tx:'#880e4f',name:'Rosa'},{bg:'#e0f7fa',tx:'#006064',name:'Cyan'},
+  {bg:'#eceff1',tx:'#263238',name:'Gris'},{bg:'#deebff',tx:'#0747a6',name:'Azul claro'},
+  {bg:'#e3fcf0',tx:'#006644',name:'Verde menta'},
+];
+const EV_ESTADOS=['Invitado','Confirmó','Asistió','Rechazó','No asistió'];
+const EV_ESTADO_COLORS={
+  'Invitado':{bg:'#deebff',tx:'#0747a6'},
+  'Confirmó':{bg:'#e3fcf0',tx:'#006644'},
+  'Asistió':{bg:'#00875a',tx:'#fff'},
+  'Rechazó':{bg:'#ffecea',tx:'#9e1b00'},
+  'No asistió':{bg:'#eceff1',tx:'#546e7a'}
+};
 
 // calls layout:
 // [0-5]  = Llamadas/WhatsApp (LW1..LW6)
