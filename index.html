@@ -1,0 +1,2435 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Leads NN — Business One</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f5f7;--surface:#ffffff;--s2:#f8f9fb;--s3:#eef0f4;
+  --border:#e4e7ec;--border2:#c9cdd6;
+  --text:#1a2332;--text2:#5a6474;--text3:#9ba5b4;
+  --green:#00875a;--gbg:#e3fcf0;--gtxt:#006644;
+  --orange:#d97706;--obg:#fff8e6;--otxt:#7c4a00;
+  --red:#de350b;--rbg:#ffecea;--rtxt:#9e1b00;
+  --blue:#0052cc;--bbg:#deebff;--btxt:#0747a6;
+  --purple:#6554c0;--tif:#c0399b;--fer:#0065ff;
+  --sidebar:#1d2b45;--sidebar2:#243352;--sidebar3:#2e3f5c;
+  --sidebar-text:#b8c4d4;--sidebar-active:#fff;
+  --r:6px;--rl:10px;
+}
+body{font-family:'Poppins',sans-serif;font-size:13px;background:var(--bg);color:var(--text);min-height:100vh}
+.shell{display:flex;flex-direction:row;height:100vh;overflow:hidden}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:10px;height:52px;flex-shrink:0;box-shadow:none;}
+.logo{display:flex;align-items:center;gap:10px;white-space:nowrap}
+.logo-divider{width:1px;height:28px;background:var(--border2)}
+.logo-title{font-size:14px;font-weight:700;color:var(--text);line-height:1.2}
+.logo-sub{font-size:10px;color:var(--text2);font-weight:500}
+.spacer{flex:1}
+.nav-tabs{display:flex;flex-direction:column;gap:1px;padding:8px 10px;width:100%}
+.nav-tab{padding:8px 12px;border:none;background:transparent;border-radius:6px;font-size:12px;font-weight:500;color:var(--sidebar-text);cursor:pointer;font-family:'Poppins',sans-serif;display:flex;align-items:center;gap:9px;white-space:nowrap;transition:all .15s;text-align:left;width:100%}
+.nav-tab.active{background:rgba(255,255,255,.12);color:var(--sidebar-active);font-weight:600}
+.nav-tab:hover:not(.active){background:rgba(255,255,255,.07);color:#fff}
+.btn{padding:6px 14px;border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer;font-family:'Poppins',sans-serif;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);transition:all .15s;white-space:nowrap;height:32px}
+.btn:hover:not(:disabled){background:var(--s2)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-blue{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:600}
+.btn-blue:hover:not(:disabled){background:var(--btxt)}
+.btn-red{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-red:hover:not(:disabled){background:#a82e2e}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:10px 18px;border-radius:var(--r);font-size:12px;font-weight:500;z-index:9999;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.ok{background:var(--green)}.toast.err{background:var(--red)}
+.loading-bar{height:3px;background:var(--bbg);position:relative;overflow:hidden;flex-shrink:0}
+.loading-bar::after{content:'';position:absolute;left:-40%;width:40%;height:100%;background:var(--blue);animation:lb 1.2s infinite ease-in-out}
+@keyframes lb{0%{left:-40%}100%{left:100%}}
+.loading-bar.hidden{display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.agenda-bar{background:var(--bbg);border-bottom:1px solid #b5d4f4;padding:6px 20px;font-size:11.5px;color:var(--btxt);display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap}
+.a-pip{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--blue);margin:0 3px}
+.toolbar{padding:9px 20px;display:flex;align-items:center;gap:8px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+.srch{position:relative;flex:1;max-width:280px}
+.srch svg{position:absolute;left:8px;top:50%;transform:translateY(-50%);opacity:.4}
+.srch input{width:100%;padding:6px 8px 6px 28px;border:1px solid var(--border2);border-radius:var(--r);font-size:12px;background:var(--s2);color:var(--text);font-family:'Poppins',sans-serif}
+.srch input:focus{outline:none;border-color:var(--blue);background:#fff}
+.flt{padding:6px 9px;border:1px solid var(--border2);border-radius:var(--r);font-size:12px;background:var(--s2);color:var(--text);font-family:'Poppins',sans-serif;cursor:pointer}
+.flt:focus{outline:none;border-color:var(--blue)}
+.stats-row{display:flex;gap:8px;padding:10px 20px;background:var(--bg);flex-shrink:0;flex-wrap:wrap;overflow-x:auto}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:11px 16px;flex:1;min-width:80px;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.sc-label{font-size:10px;color:var(--text2);margin-bottom:2px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.sc-val{font-size:22px;font-weight:800;letter-spacing:-.5px}
+.sc-val.g{color:var(--green)}.sc-val.o{color:var(--orange)}.sc-val.r{color:var(--red)}.sc-val.b{color:var(--blue)}
+.content{flex:1;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column}
+.tbl-wrap{flex:1;display:flex;flex-direction:column;padding:0;overflow:hidden}
+.tbl-container{flex:1;overflow-y:auto;overflow-x:auto;position:relative}
+.tbl-container::-webkit-scrollbar{height:10px;width:10px}
+.tbl-container::-webkit-scrollbar-track{background:var(--s2)}
+.tbl-container::-webkit-scrollbar-thumb{background:var(--border2);border-radius:5px}
+.tbl-container::-webkit-scrollbar-thumb:hover{background:var(--text3)}
+table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);font-size:11px;min-width:820px;margin:12px 20px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+thead th{padding:9px 10px;font-size:9px;font-weight:700;color:var(--text3);background:var(--s2);border-bottom:1px solid var(--border);white-space:nowrap;letter-spacing:.06em;text-transform:uppercase;text-align:left;position:sticky;top:0}
+td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:11.5px}
+td:last-child{border-right:none}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#f0f4ff;transition:background .1s}
+/* ── Círculos de contacto (solo modal) ── */
+.circ-section{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.circ-group{display:flex;flex-direction:column;gap:6px}
+.circ-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px}
+.circ-counter{font-size:11px;font-weight:700;background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:2px 9px;color:var(--text2)}
+.circ-counter.lw{color:var(--blue)}.circ-counter.em{color:var(--green)}
+.circ-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.cdot{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;cursor:pointer;user-select:none;transition:all .12s;border:1.5px solid}
+.cdot.on-lw{background:var(--bbg);color:var(--blue);border-color:#7ab4ee}
+.cdot.on-em{background:var(--gbg);color:var(--gtxt);border-color:#8dd4b5}
+.cdot.off{background:var(--s3);color:var(--text3);border-color:var(--border)}
+.cdot:hover{transform:scale(1.12)}
+
+/* ══ SIDEBAR ══ */
+.sidebar{width:210px;min-width:210px;background:var(--sidebar);display:flex;flex-direction:column;height:100vh;flex-shrink:0;overflow:hidden}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:18px 16px 14px;border-bottom:1px solid var(--sidebar3)}
+.sidebar-section-label{font-size:9px;font-weight:700;color:var(--sidebar-text);letter-spacing:.1em;padding:14px 18px 4px;opacity:.6}
+.sidebar-bottom{margin-top:auto;padding:14px 10px;border-top:1px solid var(--sidebar3);display:flex;flex-direction:column;gap:4px}
+.sidebar-btn{background:transparent;border:1px solid rgba(255,255,255,.1);border-radius:var(--r);padding:7px 12px;font-size:11.5px;font-weight:500;color:var(--sidebar-text);cursor:pointer;font-family:'Poppins',sans-serif;display:flex;align-items:center;gap:8px;transition:all .15s;width:100%;text-align:left}
+.sidebar-btn:hover{background:rgba(255,255,255,.08);color:#fff;border-color:rgba(255,255,255,.2)}
+.sidebar-users{display:flex;align-items:center;margin-top:10px;padding:8px 4px}
+.user-avatar{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;border:2px solid var(--sidebar);flex-shrink:0}
+.user-avatar.tif{background:var(--tif)}
+.user-avatar.fer{background:var(--fer);margin-left:-6px}
+/* ══ MAIN AREA ══ */
+.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar-left{display:flex;align-items:center;gap:4px}
+/* ══ TOOLBAR improvements ══ */
+.toolbar{padding:8px 20px;display:flex;align-items:center;gap:8px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+.srch input{border-radius:20px;padding-left:32px;background:var(--s2)}
+.srch input:focus{border-radius:var(--r)}
+/* ══ STATS ROW ══ */
+.stats-row{display:flex;gap:10px;padding:12px 20px;background:var(--bg);flex-shrink:0;flex-wrap:wrap;overflow-x:auto}
+/* ══ AGENDA BAR ══ */
+.agenda-bar{background:linear-gradient(90deg,#deebff,#f0f7ff);border-bottom:1px solid #b3d4ff;padding:7px 20px;font-size:11.5px;color:#0747a6;display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap;font-weight:500}
+
+
+/* ── Sidebar collapsible ── */
+.sidebar{transition:width .22s cubic-bezier(.4,0,.2,1);overflow:hidden}
+.sidebar.collapsed{width:52px!important;min-width:52px!important}
+.sidebar.collapsed .sidebar-logo-text,
+.sidebar.collapsed .nav-label,.sidebar.collapsed .sidebar-bottom-content,.sidebar.collapsed .sidebar-section-label{display:none}
+.sidebar.collapsed .nav-tab{justify-content:center;padding:10px 0}
+.sidebar.collapsed .sidebar-logo{justify-content:center;padding:14px 0}
+.sidebar-toggle{position:absolute;top:14px;left:168px;z-index:50;background:var(--sidebar3);border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;color:var(--sidebar-text);display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .22s}
+.sidebar.collapsed .sidebar-toggle{left:30px}
+.sidebar-toggle:hover{background:var(--blue);color:#fff}
+.sidebar-logo-text{flex:1}
+
+
+/* Sidebar collapsed — icon-only with tooltip */
+.sidebar.collapsed .nav-tab{padding:10px;justify-content:center;position:relative}
+.sidebar.collapsed .nav-tab::after{content:attr(title);position:absolute;left:58px;top:50%;transform:translateY(-50%);background:var(--sidebar);color:#fff;padding:4px 10px;border-radius:6px;font-size:11px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:100;border:1px solid var(--sidebar3)}
+.sidebar.collapsed .nav-tab:hover::after{opacity:1}
+
+/* ── Tabla ── */
+.led{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+.lg{background:var(--green)}.lo{background:var(--orange)}.lr{background:var(--red)}
+.status-bar{display:block;width:3px;height:100%;min-height:32px;border-radius:0 2px 2px 0}
+.status-bar-open{background:var(--green)}.status-bar-hold{background:var(--orange)}.status-bar-reject{background:var(--red)}
+.rz-link{font-weight:700;color:var(--blue);cursor:pointer;white-space:nowrap;border-bottom:1px dashed #9abfed;font-size:11px}
+.rz-link:hover{opacity:.8}
+.cn{white-space:nowrap;font-size:11px}.cc{font-size:9px;color:var(--text3)}
+.tel{font-family:monospace;font-size:10px;white-space:nowrap}
+/* ── mini progreso LW/E en tabla ── */
+.mini-prog{display:none}
+.mini-prog-bar{display:flex;gap:2px}
+.mini-pip{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sdot{width:12px;height:12px;border-radius:3px;display:inline-block;cursor:pointer;border:1.5px solid var(--border2);transition:all .12s}
+.sdot.sg{background:var(--green);border-color:var(--green)}
+.sdot.sb{background:var(--blue);border-color:var(--blue)}
+.sdot:hover{transform:scale(1.15)}
+.chip{font-size:9.5px;padding:3px 9px;border-radius:20px;font-weight:700;white-space:nowrap;display:inline-block;letter-spacing:.02em}
+.cg{background:var(--gbg);color:var(--gtxt)}.co{background:var(--obg);color:var(--otxt)}.cr{background:var(--rbg);color:var(--rtxt)}
+.enc-chip{font-size:9px;padding:2px 7px;border-radius:20px;font-weight:700;white-space:nowrap;display:inline-block}
+.ibt{background:transparent;border:1px solid var(--border);border-radius:6px;padding:2px 6px;cursor:pointer;color:var(--text2);font-size:10px;transition:all .15s;font-family:'Poppins',sans-serif}
+.ibt:hover{background:var(--bbg);color:var(--blue)}
+.del-btn{background:transparent;border:1px solid var(--border);border-radius:6px;padding:2px 6px;cursor:pointer;color:var(--text3);font-size:10px;transition:all .15s;font-family:'Poppins',sans-serif}
+.del-btn:hover{background:var(--rbg);color:var(--red)}
+/* ── Kanban ── */
+.kanban-wrap{padding:12px 20px 20px;overflow-x:auto}
+.kb-board{display:flex;gap:12px;min-width:940px}
+.kb-col{flex:1;min-width:170px;border-radius:var(--rl);border:1px solid var(--border);background:var(--s2)}
+.kb-head{padding:10px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;border-top:3px solid var(--border2);border-radius:var(--rl) var(--rl) 0 0}
+.kb-cnt{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;color:var(--text2)}
+.kb-cards{padding:8px;display:flex;flex-direction:column;gap:7px;min-height:120px}
+.kb-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px 11px;cursor:pointer;transition:all .15s}
+.kb-card:hover{border-color:var(--blue);box-shadow:0 2px 8px rgba(23,98,179,.1)}
+.kb-card-top{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.kb-card-name{font-weight:700;font-size:12px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kb-card-contact{font-size:11px;color:var(--text2);margin-bottom:5px}
+.kb-card-bot{display:flex;justify-content:space-between;align-items:center;gap:4px;flex-wrap:wrap}
+/* ── Historial ── */
+.hist-wrap{padding:16px 20px}
+.hist-grid{display:grid;grid-template-columns:290px 1fr;gap:14px}
+.hist-list-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;max-height:calc(100vh - 230px);overflow-y:auto}
+.hist-list-hdr{padding:10px 14px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;position:sticky;top:0;background:var(--surface)}
+.hist-lead-item{padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;display:flex;align-items:center;gap:8px}
+.hist-lead-item:last-child{border-bottom:none}
+.hist-lead-item:hover{background:var(--s2)}
+.hist-lead-item.active{background:var(--bbg);border-left:3px solid var(--blue)}
+.hli-name{font-weight:600;font-size:12px}.hli-sub{font-size:10px;color:var(--text3)}
+.hli-cnt{margin-left:auto;background:var(--s3);border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;color:var(--text2)}
+.hist-timeline-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden}
+.hist-tl-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.hist-tl-title{font-size:14px;font-weight:700}
+.hist-tl-sub{font-size:11px;color:var(--text3)}
+.timeline{padding:14px 16px;display:flex;flex-direction:column;max-height:calc(100vh - 340px);overflow-y:auto}
+.tl-item{display:flex;gap:12px;position:relative}
+.tl-item:not(:last-child)::before{content:'';position:absolute;left:15px;top:30px;bottom:0;width:2px;background:var(--border)}
+.tl-icon{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;z-index:1;border:2px solid var(--surface)}
+.tl-body{flex:1;padding-bottom:16px}
+.tl-meta{font-size:9px;color:var(--text3);margin-bottom:2px;display:flex;align-items:center;gap:6px}
+.tl-exec-date{font-size:9px;color:var(--blue);font-weight:600;margin-bottom:4px;padding:3px 6px;background:var(--bbg);border-radius:4px;display:inline-block}
+.tl-del{background:transparent;border:none;cursor:pointer;color:var(--text3);font-size:11px;padding:1px 4px;border-radius:4px;transition:all .15s;margin-left:auto}
+.tl-del:hover{background:var(--rbg);color:var(--red)}
+.tl-tipo{font-weight:700;font-size:12px;margin-bottom:2px}
+.tl-nota{font-size:12px;color:var(--text2);line-height:1.5}
+.tl-empty{text-align:center;padding:40px 20px;color:var(--text3)}
+.add-hist-bar{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--s2);flex-wrap:wrap}
+.add-hist-bar select,.add-hist-bar input{padding:6px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:12px;background:var(--surface);color:var(--text);font-family:'Poppins',sans-serif}
+.add-hist-bar input{flex:1;min-width:80px}
+/* ── Tareas ── */
+.tareas-wrap{padding:12px 20px 20px}
+.tareas-top{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;overflow-x:auto}
+.tarea-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:10px 14px;display:flex;align-items:center;gap:10px;min-width:140px;flex:1;flex-shrink:0}
+.tarea-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.tarea-label{font-size:10px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.tarea-val{font-size:20px;font-weight:700}
+.tk-board{display:flex;gap:12px;min-width:940px}
+.tk-col{flex:1;min-width:170px;border-radius:var(--rl);border:1px solid var(--border);background:var(--s2)}
+.tk-head{padding:9px 12px;border-bottom:1px solid var(--border);border-radius:var(--rl) var(--rl) 0 0;border-top:3px solid transparent;display:flex;justify-content:space-between;align-items:center}
+.tk-cards{padding:8px;display:flex;flex-direction:column;gap:7px;min-height:80px}
+.tk-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:var(--r);padding:9px 11px;cursor:pointer;transition:all .15s}
+.tk-card:hover{box-shadow:0 2px 6px rgba(23,98,179,.1)}
+.tk-card.urgente{border-left-color:var(--red)}.tk-card.hoy{border-left-color:var(--orange)}.tk-card.prox{border-left-color:var(--green)}
+.tk-card-name{font-weight:700;font-size:12px;margin-bottom:3px}
+.tk-card-contact{font-size:11px;color:var(--text2);margin-bottom:5px}
+.tk-card-date{font-size:10px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.empty-k{text-align:center;padding:20px 10px;color:var(--text3);font-size:11px}
+/* ── Dashboard ── */
+.dash-wrap{padding:16px 20px 20px}
+.kpi-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;overflow-x:auto}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:12px 16px;flex:1;min-width:110px;text-align:center;flex-shrink:0}
+.kpi-val{font-size:28px;font-weight:800;line-height:1}
+.kpi-lbl{font-size:10px;color:var(--text2);margin-top:4px;font-weight:500}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.dash-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:16px}
+.dash-card.full{grid-column:1/-1}
+.dash-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px}
+.bar-chart{display:flex;flex-direction:column;gap:8px}
+.bar-row{display:flex;align-items:center;gap:10px;font-size:11px}
+.bar-label{width:100px;color:var(--text2);font-weight:500;text-align:right;flex-shrink:0;font-size:10px}
+.bar-track{flex:1;background:var(--s3);border-radius:20px;height:18px;overflow:hidden}
+.bar-fill{height:100%;border-radius:20px;display:flex;align-items:center;padding-left:8px;font-size:10px;font-weight:700;color:#fff;transition:width .6s;min-width:6px}
+.bar-count{font-weight:700;color:var(--text);width:28px;text-align:right;flex-shrink:0}
+.week-chart{display:flex;align-items:flex-end;gap:6px;height:130px;padding:0 4px}
+.week-col{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
+.week-bar-wrap{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:2px}
+.week-bar{width:45%;border-radius:3px 3px 0 0;min-height:3px;transition:height .4s}
+.week-lbl{font-size:9px;color:var(--text3);text-align:center;line-height:1.4}
+.week-val{font-size:10px;font-weight:700;color:var(--text2)}
+/* ── Modal Lead (view + edit) ── */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center}
+.mo.open{display:flex}
+.mo-box{background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);width:94%;max-width:700px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.mo-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;position:sticky;top:0;background:var(--surface);z-index:5}
+.mo-led{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.mo-title{font-size:15px;font-weight:700;flex:1}
+.mo-mode-badge{font-size:10px;padding:3px 9px;border-radius:20px;font-weight:600;border:1px solid}
+.mo-mode-badge.view{background:var(--s2);color:var(--text2);border-color:var(--border2)}
+.mo-mode-badge.edit{background:var(--bbg);color:var(--blue);border-color:#9abfed}
+.mo-x{background:transparent;border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--text2);font-size:18px;line-height:1;padding:2px 9px;font-family:'Poppins',sans-serif}
+.mo-x:hover{background:var(--rbg);color:var(--red)}
+.mo-body{padding:16px 18px;display:flex;flex-direction:column;gap:14px}
+.mo-ftr{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:var(--surface)}
+.sec{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fr3{grid-template-columns:1fr 1fr 1fr}
+/* ── Campos view mode (solo lectura) ── */
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:10.5px;color:var(--text2);font-weight:600}
+.field input,.field select,.field textarea{padding:6px 9px;border:1px solid var(--border2);border-radius:var(--r);font-size:12px;background:var(--s2);color:var(--text);font-family:'Poppins',sans-serif}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--blue);background:#fff}
+.field textarea{resize:vertical;min-height:50px}
+.field input[disabled],.field select[disabled],.field textarea[disabled]{background:var(--s2);color:var(--text2);cursor:default;border-color:var(--border);opacity:1}
+.fv{font-size:12px;color:var(--text);padding:6px 0;line-height:1.5;min-height:28px}
+.fv.em{color:var(--text3);font-style:italic}
+/* ── BANT ── */
+.bant-g{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bant-box{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:10px}
+.bant-lbl{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.bant-ta{width:100%;padding:5px 7px;border:1px solid var(--border2);border-radius:6px;font-size:12px;background:#fff;color:var(--text);font-family:'Poppins',sans-serif;min-height:50px;resize:vertical}
+.bant-ta:focus{outline:none;border-color:var(--blue)}
+.bant-ta[disabled]{background:var(--s2);border-color:transparent;cursor:default;opacity:1;color:var(--text)}
+/* ── Historial en modal ── */
+.mo-hist{display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto}
+.mo-hi{padding:8px 10px;background:var(--s2);border-radius:var(--r);border-left:3px solid var(--border2);display:flex;gap:6px;align-items:flex-start}
+.mo-hi.tl{border-left-color:var(--blue)}.mo-hi.tw{border-left-color:var(--green)}.mo-hi.tr{border-left-color:var(--orange)}.mo-hi.td{border-left-color:var(--purple)}
+.mo-hi-content{flex:1;min-width:0}
+.mo-hi-meta{font-size:9px;color:var(--text3);margin-bottom:2px;display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.mo-hi-exec{font-size:9px;color:var(--blue);font-weight:600;background:var(--bbg);padding:2px 6px;border-radius:3px;display:inline-block}
+.mo-hi-del{background:transparent;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:0 2px;transition:color .15s;flex-shrink:0}
+.mo-hi-del:hover{color:var(--red)}
+.add-n{display:flex;gap:7px;align-items:flex-start;flex-wrap:wrap}
+.add-n select,.add-n textarea,.add-n input[type=date]{padding:6px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:12px;background:var(--s2);color:var(--text);font-family:'Poppins',sans-serif}
+.add-n textarea{flex:1;resize:none;height:36px;min-width:150px}
+.add-n input[type="date"]{min-width:120px}
+.sav-ind{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px;margin-right:auto}
+/* ── Modal Empresa ── */
+.emp-contacts{display:flex;flex-direction:column;gap:8px}
+.emp-contact-row{display:flex;align-items:center;gap:6px;padding:8px 10px;background:var(--s2);border-radius:var(--r);border:1px solid var(--border);flex-wrap:wrap}
+.emp-contact-row input{flex:1;min-width:80px;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;background:#fff;color:var(--text);font-family:'Poppins',sans-serif}
+.emp-contact-row input:focus{outline:none;border-color:var(--blue)}
+.emp-add-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;border:1.5px dashed var(--border2);border-radius:var(--r);background:transparent;cursor:pointer;font-size:12px;color:var(--text2);width:100%;font-family:'Poppins',sans-serif;transition:all .15s;margin-top:4px}
+.emp-add-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--bbg)}
+.cond-tags{display:flex;gap:6px;flex-wrap:wrap;padding:8px;background:var(--s2);border:1px solid var(--border2);border-radius:var(--r)}
+.cond-tag{font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;transition:all .15s;user-select:none}
+.cond-tag.on{background:var(--bbg);color:var(--blue);border-color:var(--blue);font-weight:600}
+/* ── Modal fecha ── */
+.date-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:400;align-items:center;justify-content:center}
+.date-modal.open{display:flex}
+.date-modal-box{background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);padding:20px;width:300px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.date-modal-title{font-weight:700;margin-bottom:12px;font-size:14px}
+.date-modal-input{width:100%;padding:8px;border:1px solid var(--border2);border-radius:var(--r);font-size:12px;margin-bottom:12px}
+.date-modal-buttons{display:flex;gap:8px;justify-content:flex-end}
+
+/* ── Header column filter dropdowns (Monday.com style) ── */
+.th-filter{position:relative;display:inline-flex;align-items:center;gap:4px;cursor:pointer;user-select:none}
+.th-filter-btn{background:transparent;border:none;cursor:pointer;color:var(--text3);padding:2px 3px;border-radius:4px;font-size:9px;line-height:1;transition:all .15s;display:inline-flex;align-items:center}
+.th-filter-btn:hover,.th-filter-btn.active{background:var(--bbg);color:var(--blue)}
+.th-filter-btn.active{color:var(--blue)}
+.th-filter-menu{position:absolute;top:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:200;min-width:150px;padding:4px;display:none}
+.th-filter-menu.open{display:block}
+.th-filter-opt{padding:5px 10px;border-radius:5px;font-size:11px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;color:var(--text);transition:background .1s}
+.th-filter-opt:hover{background:var(--s2)}
+.th-filter-opt.selected{background:var(--bbg);color:var(--blue);font-weight:600}
+.th-filter-opt .opt-check{width:12px;height:12px;border-radius:3px;border:1.5px solid var(--border2);display:inline-flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0}
+.th-filter-opt.selected .opt-check{background:var(--blue);border-color:var(--blue);color:#fff}
+/* ── Semáforo selector en modal ── */
+.sem-selector{display:flex;gap:6px}
+.sem-opt{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:2px solid transparent;transition:all .12s;opacity:.5}
+.sem-opt.active{opacity:1;border-color:currentColor}
+.sem-opt.sg{color:var(--green);background:var(--gbg)}
+.sem-opt.so{color:var(--orange);background:var(--obg)}
+.sem-opt.sr{color:var(--red);background:var(--rbg)}
+
+/* ── Login screen ── */
+#login-screen{position:fixed;inset:0;background:#f0f2f5;z-index:9999;display:flex;align-items:center;justify-content:center}
+.login-box{background:#fff;border:1px solid #e3e6ea;border-radius:16px;padding:40px 36px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.10);display:flex;flex-direction:column;align-items:center;gap:18px}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.login-title{font-size:17px;font-weight:700;color:#18202c;text-align:center}
+.login-sub{font-size:12px;color:#556270;text-align:center;margin-top:-10px}
+.login-input{width:100%;padding:10px 14px;border:1px solid #c8cdd4;border-radius:8px;font-size:14px;font-family:'Poppins',sans-serif;color:#18202c;background:#f7f8fa;outline:none;text-align:center;letter-spacing:2px}
+.login-input:focus{border-color:#1762b3;background:#fff}
+.login-btn{width:100%;padding:10px;border-radius:8px;border:none;background:#1762b3;color:#fff;font-size:13px;font-weight:600;font-family:'Poppins',sans-serif;cursor:pointer;transition:background .15s}
+.login-btn:hover{background:#0c3f80}
+.login-err{font-size:11px;color:#d03c3c;font-weight:500;min-height:16px}
+
+/* ── Export modal ── */
+#mo-export{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;align-items:center;justify-content:center}
+#mo-export.open{display:flex}
+.export-box{background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);width:94%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.export-cols{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:14px 18px}
+.export-col-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--r);border:1px solid var(--border);cursor:pointer;transition:all .12s;user-select:none}
+.export-col-item:hover{background:var(--s2)}
+.export-col-item.checked{background:var(--bbg);border-color:#9abfed}
+.export-col-item input[type=checkbox]{accent-color:var(--blue);width:14px;height:14px;cursor:pointer;flex-shrink:0}
+.export-col-item label{font-size:11px;font-weight:500;cursor:pointer;color:var(--text)}
+.export-col-item.checked label{color:var(--blue);font-weight:600}
+.export-sel-bar{padding:8px 18px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.export-sel-bar button{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;font-family:'Poppins',sans-serif}
+.export-sel-bar button:hover{background:var(--bbg);color:var(--blue)}
+.export-count{font-size:11px;color:var(--text3);margin-left:auto}
+
+/* ── Multi-tel widget ── */
+.tel-list{display:flex;flex-direction:column;gap:4px}
+.tel-item{display:flex;align-items:center;gap:6px}
+.tel-item input{flex:1;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:12px;font-family:'Poppins',sans-serif;color:var(--text);background:var(--surface)}
+.tel-item input:focus{outline:none;border-color:var(--blue)}
+.tel-del{background:transparent;border:1px solid var(--border2);border-radius:6px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--text3);flex-shrink:0;transition:all .12s}
+.tel-del:hover{background:var(--rbg);border-color:var(--red);color:var(--red)}
+.tel-add{font-size:11px;color:var(--blue);background:var(--bbg);border:1px dashed #9abfed;border-radius:var(--r);padding:5px 10px;cursor:pointer;font-family:'Poppins',sans-serif;font-weight:500;margin-top:2px;transition:all .12s}
+.tel-add:hover{background:#d6e8fc}
+/* Tel display in table */
+.tel-stack{display:flex;flex-direction:column;gap:2px}
+.tel-stack span{font-size:11px;color:var(--text2);white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="https://proimg.seidor.com/sites/default/files/styles/open_graph/public/2022-03/LOGO_COLOR_POSITIVE.png?itok=TSczsmGz" style="width:36px;height:36px;border-radius:8px;object-fit:contain">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#18202c">CRM Leads NN</div>
+        <div style="font-size:10px;color:#556270">Business One</div>
+      </div>
+    </div>
+    <div class="login-title">Acceso privado</div>
+    <div class="login-sub">Ingresa la contraseña para continuar</div>
+    <input class="login-input" type="password" id="login-pass" placeholder="••••••••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="login-err" id="login-err"></div>
+    <button class="login-btn" onclick="doLogin()">Entrar</button>
+  </div>
+</div>
+<div class="shell">
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar collapsed" id="sidebar">
+  <div class="sidebar-logo" style="position:relative">
+  <button class="sidebar-toggle" id="sb-toggle" onclick="toggleSidebar()" title="Expandir menú">▶</button>
+    <img src="https://proimg.seidor.com/sites/default/files/styles/open_graph/public/2022-03/LOGO_COLOR_POSITIVE.png?itok=TSczsmGz" alt="Logo" style="width:30px;height:30px;border-radius:7px;object-fit:contain;flex-shrink:0">
+    <div class="sidebar-logo-text">
+      <div style="font-size:13px;font-weight:700;color:#fff;line-height:1.2">CRM Leads</div>
+      <div style="font-size:10px;color:var(--sidebar-text)">Business One</div>
+    </div>
+  </div>
+  <div class="sidebar-section-label">MENÚ</div>
+  <nav class="nav-tabs">
+    <button class="nav-tab active" onclick="setTab('tabla')" id="t-tabla" title="Leads">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+      <span class="nav-label">Leads</span>
+    </button>
+    <button class="nav-tab" onclick="setTab('kanban')" id="t-kanban" title="Pipeline">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="5" height="15" rx="1"/></svg>
+      <span class="nav-label">Pipeline</span>
+    </button>
+    <button class="nav-tab" onclick="setTab('historial')" id="t-historial" title="Historial">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+      <span class="nav-label">Historial</span>
+    </button>
+    <button class="nav-tab" onclick="setTab('tareas')" id="t-tareas" title="Tareas">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span class="nav-label">Tareas <span id="tbadge" style="background:var(--orange);color:#fff;border-radius:20px;padding:1px 6px;font-size:9px;font-weight:700;min-width:14px;text-align:center;margin-left:4px"></span></span>
+    </button>
+    <button class="nav-tab" onclick="setTab('dashboard')" id="t-dashboard" title="Dashboard">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="6" height="8" rx="1"/><rect x="9" y="3" width="6" height="5" rx="1"/><rect x="16" y="3" width="6" height="11" rx="1"/><rect x="2" y="13" width="6" height="8" rx="1"/><rect x="9" y="10" width="6" height="11" rx="1"/></svg>
+      <span class="nav-label">Dashboard</span>
+    </button>
+    <button class="nav-tab" onclick="setTab('campanas')" id="t-campanas" title="Campañas">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+      <span class="nav-label">Campañas</span>
+    </button>
+    <button class="nav-tab" onclick="setTab('eventos')" id="t-eventos" title="Eventos">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span class="nav-label">Eventos</span>
+    </button>
+  </nav>
+  <div class="sidebar-bottom"><div class="sidebar-bottom-content">
+    <div style="font-size:10px;color:var(--sidebar-text);margin-bottom:8px;font-weight:600;letter-spacing:.05em">ACCIONES</div>
+    <button class="sidebar-btn" onclick="exportLeads()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Exportar Excel
+    </button>
+    <button class="sidebar-btn" onclick="loadLeads()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      Sincronizar
+    </button>
+    <div class="sidebar-users">
+      <span class="user-avatar tif">T</span>
+      
+    </div>
+  </div></div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main-area">
+<div class="topbar">
+  <div class="topbar-left">
+    <div id="page-title" style="font-size:15px;font-weight:700;color:var(--text)">Leads</div>
+    <div id="page-sub" style="font-size:11px;color:var(--text3);margin-left:8px"></div>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn btn-blue" onclick="openNew()">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Nuevo Lead
+  </button>
+</div>
+
+<div class="loading-bar" id="lbar"></div>
+<div class="agenda-bar" id="agenda">Cargando datos desde Google Sheets...</div>
+
+<div class="toolbar" id="toolbar-main">
+  <div class="srch">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="q" placeholder="Buscar empresa, contacto..." oninput="filterAll()">
+  </div>
+  <select class="flt" id="f-sem" onchange="filterAll()">
+    <option value="">Todos los status</option>
+    <option value="g">🟢 ABIERTO</option>
+    <option value="o">🟠 HOLD</option>
+    <option value="r">🔴 REJECT</option>
+  </select>
+  <select class="flt" id="f-etapa" onchange="filterAll()">
+    <option value="">Todas las etapas</option>
+    <option>Contacto Inicial</option><option>Seguimiento</option>
+    <option>Reunión de Exploración</option><option>Sesión Diagnóstico</option><option>Cerrado</option>
+  </select>
+
+
+</div>
+
+<div class="stats-row" id="stats"></div>
+
+<div class="content">
+  <!-- TABLA -->
+  <div id="view-tabla" class="tbl-wrap">
+    <div class="tbl-container">
+      <table style="margin:12px 20px">
+        <thead><tr>
+          <th style="width:3px;padding:0"></th>
+          <th>Razón Social</th>
+          <th>Contacto</th>
+          <th>Teléfono</th>
+          <th><div class="th-filter" id="thf-evento">Evento<button class="th-filter-btn" id="thfbtn-evento" onclick="toggleThFilter(event,'evento')">▾</button><div class="th-filter-menu" id="thfm-evento"></div></div></th>
+          <th><div class="th-filter" id="thf-kam">KAM<button class="th-filter-btn" id="thfbtn-kam" onclick="toggleThFilter(event,'kam')">▾</button><div class="th-filter-menu" id="thfm-kam"></div></div></th>
+          <th style="text-align:center">LW</th>
+          <th style="text-align:center">Correos</th>
+          <th style="text-align:center">Exploración</th>
+          <th style="text-align:center">Diagnóst.</th>
+          <th><div class="th-filter" id="thf-status">Status<button class="th-filter-btn" id="thfbtn-status" onclick="toggleThFilter(event,'status')">▾</button><div class="th-filter-menu" id="thfm-status"></div></div></th>
+          <th>Próx. Acción</th>
+          
+          <th style="width:60px"></th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- KANBAN -->
+  <div id="view-kanban" class="kanban-wrap" style="display:none"><div class="kb-board" id="kboard"></div></div>
+
+  <!-- HISTORIAL -->
+  <div id="view-historial" class="hist-wrap" style="display:none">
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <div class="srch" style="max-width:260px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="hq" placeholder="Buscar en historial..." oninput="renderHistorial()">
+      </div>
+      
+    </div>
+    <div class="hist-grid">
+      <div class="hist-list-panel"><div class="hist-list-hdr">Leads con historial</div><div id="hlist"></div></div>
+      <div class="hist-timeline-panel"><div id="htl"></div></div>
+    </div>
+  </div>
+
+  <!-- TAREAS -->
+  <div id="view-tareas" class="tareas-wrap" style="display:none">
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <select class="flt" id="tenc" onchange="renderTareas()">
+        <option value="">Encargado: Todas</option>
+        <option value="Tifany">Tifany</option>
+      </select>
+    </div>
+    <div class="tareas-top" id="ttop"></div>
+    <div style="overflow-x:auto"><div class="tk-board" id="tkboard"></div></div>
+    <div style="margin-top:16px">
+      <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;padding:0 4px;display:flex;align-items:center;gap:8px">
+        ✅ Tareas Asignadas en Historial
+        <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none">— generadas desde el historial de cada lead</span>
+      </div>
+      <div id="tareas-hist" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px"></div>
+    </div>
+  </div>
+
+  <!-- EVENTOS CORPORATIVOS -->
+  <div id="view-eventos" style="display:none;padding:16px 20px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <div style="flex:1;font-size:14px;font-weight:700;color:var(--text)">Eventos Corporativos</div>
+      <button class="btn btn-blue" onclick="openNewEvento()">+ Nuevo Evento</button>
+    </div>
+    <div id="eventos-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px"></div>
+  </div>
+
+  <!-- CAMPAÑAS -->
+  <div id="view-campanas" style="display:none;padding:16px 20px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <div style="flex:1;font-size:14px;font-weight:700;color:var(--text)">Gestión de Campañas</div>
+      <button class="btn btn-blue" onclick="openNewCampana()">+ Nueva Campaña</button>
+    </div>
+    <div id="campanas-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px"></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="view-dashboard" class="dash-wrap" style="display:none">
+    <div class="kpi-row" id="kpis"></div>
+    <div class="dash-grid">
+      <div class="dash-card"><div class="dash-title">Leads por Etapa</div><div class="bar-chart" id="detapa"></div></div>
+      <div class="dash-card"><div class="dash-title">Tasa de Reactivación (HOLD → Exploración)</div><div class="bar-chart" id="dreact"></div></div>
+      <div class="dash-card"><div class="dash-title">Motivos de Descarte (REJECT)</div><div class="bar-chart" id="dreject"></div></div>
+      <div class="dash-card full"><div class="dash-title">📊 Embudo de Prospección</div><div id="dembudo"></div></div>
+      <div class="dash-card full"><div class="dash-title">Actividad Semanal — Últimas 8 semanas</div>
+        <div style="overflow-x:auto"><div class="week-chart" id="dweek" style="min-width:480px"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div><!-- /main-area -->
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- MODAL LEAD — View / Edit                   -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="mo" id="mo">
+  <div class="mo-box">
+    <div class="mo-hdr">
+      <span class="mo-led" id="mled"></span>
+      <div class="mo-title" id="mtitle">Lead</div>
+      <span class="mo-mode-badge view" id="mbadge">Vista</span>
+      <button class="mo-x" onclick="closeMo()">&#x2715;</button>
+    </div>
+    <div class="mo-body" id="mbody"></div>
+    <div class="mo-ftr" id="mftr">
+      <!-- se rellena por JS según modo -->
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EMPRESA -->
+<div class="mo" id="mo-emp" onclick="if(event.target.id==='mo-emp')closeEmp()">
+  <div class="mo-box">
+    <div class="mo-hdr">
+      <span class="mo-led" id="eled"></span>
+      <div class="mo-title" id="etitle">Datos de Empresa</div>
+      <button class="mo-x" onclick="closeEmp()">&#x2715;</button>
+    </div>
+    <div class="mo-body" id="ebody"></div>
+    <div class="mo-ftr">
+      <button class="btn" onclick="closeEmp()">Cancelar</button>
+      <button class="btn btn-blue" onclick="saveEmp()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FECHA (exploración / diagnóstico desde tabla) -->
+<div class="date-modal" id="date-modal" onclick="if(event.target.id==='date-modal')closeDateModal()">
+  <div class="date-modal-box">
+    <div class="date-modal-title" id="date-modal-title">Seleccionar Fecha</div>
+    <input type="date" id="date-modal-input" class="date-modal-input">
+    <div class="date-modal-buttons">
+      <button class="btn" onclick="closeDateModal()">Cancelar</button>
+      <button class="btn btn-blue" onclick="saveDateSelection()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL TAREA ACTION -->
+<div id="mo-task" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:700;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);padding:22px 24px;width:92%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="font-size:14px;font-weight:700;margin-bottom:4px" id="task-modal-title">Acción de Tarea</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:16px" id="task-modal-sub"></div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      <button class="btn" style="justify-content:flex-start;gap:10px;padding:10px 14px" onclick="doTaskDone()">✅ Marcar como realizada</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn" style="flex:1;justify-content:flex-start;gap:10px;padding:10px 14px" onclick="doTaskPostpone()">📅 Aplazar a nueva fecha</button>
+        <input type="date" id="task-postpone-date" style="padding:6px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:12px;font-family:'Poppins',sans-serif">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="closeTaskModal()">Cancelar</button>
+      <button class="btn btn-blue" onclick="openView(_taskLeadId)">Ver Lead</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL CAMPAÑA -->
+<div id="mo-campana" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:700;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);width:92%;max-width:460px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div class="mo-hdr"><div class="mo-title" id="mo-campana-title">Nueva Campaña</div><button class="mo-x" onclick="closeCampana()">&#x2715;</button></div>
+    <div class="mo-body" style="padding:16px 18px;display:flex;flex-direction:column;gap:12px">
+      <div class="field"><label>Nombre de la Campaña *</label><input id="c-nombre" placeholder="Ej: Campaña Retail 2026"></div>
+      <div class="fr">
+        <div class="field"><label>Fecha de Inicio</label><input id="c-fecha" type="date"></div>
+        <div class="field"><label>Responsable</label><select id="c-resp"><option value="">Sin asignar</option><option>Tifany</option></select></div>
+      </div>
+      <div class="field"><label>Descripción</label><textarea id="c-desc" style="min-height:60px;resize:vertical" placeholder="Objetivo, canal, público objetivo..."></textarea></div>
+    </div>
+    <div class="mo-ftr">
+      <button class="btn" onclick="closeCampana()">Cancelar</button>
+      <button class="btn btn-blue" onclick="saveCampana()">Guardar Campaña</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR NOTA HISTORIAL -->
+<div id="mo-edit-hist" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:900;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);width:92%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div class="mo-hdr"><div class="mo-title">✏️ Editar nota</div><button class="mo-x" onclick="closeEditHist()">&#x2715;</button></div>
+    <div class="mo-body" style="padding:16px 18px;display:flex;flex-direction:column;gap:12px">
+      <div class="field"><label>Nota</label><textarea id="eh-nota" style="min-height:72px;resize:vertical"></textarea></div>
+      <div class="field"><label>Fecha de ejecución</label><input type="date" id="eh-fecha"></div>
+    </div>
+    <div class="mo-ftr">
+      <button class="btn" onclick="closeEditHist()">Cancelar</button>
+      <button class="btn btn-blue" onclick="saveEditHist()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAR ACCIÓN GENÉRICO -->
+<div id="mo-confirm" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:950;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);width:92%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div class="mo-hdr"><div class="mo-title" id="mo-confirm-title">Confirmar</div></div>
+    <div style="padding:14px 18px 6px;font-size:13px;color:var(--text2)" id="mo-confirm-msg"></div>
+    <div class="mo-ftr">
+      <button class="btn" onclick="moConfirmResolve(false)">Cancelar</button>
+      <button class="btn btn-red" id="mo-confirm-ok" onclick="moConfirmResolve(true)">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO/EDITAR EVENTO -->
+<div id="mo-evento" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:700;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);width:92%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div class="mo-hdr"><div class="mo-title" id="mo-evento-title">Nuevo Evento</div><button class="mo-x" onclick="closeEvento()">&#x2715;</button></div>
+    <div class="mo-body" style="padding:16px 18px;display:flex;flex-direction:column;gap:12px">
+      <div class="fr">
+        <div class="field"><label>Nombre del Evento *</label><input id="ev-nombre" placeholder="Ej: Workshop Junio 2026"></div>
+        <div class="field"><label>Fecha</label><input id="ev-fecha" type="date"></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>Lugar / Modalidad</label><input id="ev-lugar" placeholder="Online / Lima / etc."></div>
+        <div class="field"><label>Capacidad</label><input id="ev-cap" type="number" placeholder="Nº asistentes"></div>
+      </div>
+      <div class="field"><label>Responsable</label>
+        <select id="ev-resp"><option value="">Sin asignar</option><option>Tifany</option></select>
+      </div>
+      <div class="field"><label>Descripción</label>
+        <textarea id="ev-desc" style="min-height:60px;resize:vertical" placeholder="Objetivo, audiencia, canal..."></textarea>
+      </div>
+    </div>
+    <div class="mo-ftr">
+      <button class="btn" onclick="closeEvento()">Cancelar</button>
+      <button class="btn btn-blue" onclick="saveEvento()">Guardar Evento</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE EVENTO -->
+<div id="mo-evento-detail" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:700;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);width:96%;max-width:700px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div class="mo-hdr">
+      <div><div class="mo-title" id="ev-detail-title">Evento</div><div style="font-size:11px;color:var(--text3)" id="ev-detail-sub"></div></div>
+      <button class="btn btn-blue" style="margin-left:auto;margin-right:8px" onclick="openAddLeadToEvento()">+ Agregar Lead</button>
+      <button class="mo-x" onclick="closeEventoDetail()">&#x2715;</button>
+    </div>
+    <div style="padding:12px 18px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--border)" id="ev-detail-stats"></div>
+    <div id="ev-detail-leads" style="padding:4px 0"></div>
+  </div>
+</div>
+
+<!-- MODAL AGREGAR LEAD A EVENTO -->
+<div id="mo-add-lead-evento" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:800;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);width:92%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div class="mo-hdr"><div class="mo-title">➕ Agregar Lead al Evento</div><button class="mo-x" onclick="closeAddLeadEvento()">&#x2715;</button></div>
+    <div style="padding:12px 18px">
+      <input id="ev-search-lead" placeholder="Buscar empresa o contacto..." style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);font-size:12px;font-family:inherit;margin-bottom:10px" oninput="renderAddLeadList()">
+      <div id="ev-add-lead-list" style="display:flex;flex-direction:column;gap:6px;max-height:400px;overflow-y:auto"></div>
+    </div>
+    <div class="mo-ftr"><button class="btn" onclick="closeAddLeadEvento()">Cerrar</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- MODAL REJECT REASON -->
+<div id="mo-reject" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:700;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);padding:24px 26px;width:92%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="font-size:15px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px">🚫 Motivo de Descarte</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:14px">¿Por qué se descarta este lead? (obligatorio)</div>
+    <select id="reject-reason-sel" style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:var(--r);font-size:12px;font-family:'Poppins',sans-serif;margin-bottom:10px;background:var(--s2)">
+      <option value="">Selecciona un motivo...</option>
+      <option>Sin presupuesto</option>
+      <option>No es decisor</option>
+      <option>Usando otro ERP</option>
+      <option>No hay necesidad activa</option>
+      <option>Competencia ganó</option>
+      <option>Sin respuesta prolongada</option>
+      <option>Empresa cerrada / reestructurada</option>
+      <option>Fuera del perfil ICP</option>
+      <option>Otro</option>
+    </select>
+    <textarea id="reject-reason-note" placeholder="Detalle adicional (opcional)..." style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:var(--r);font-size:12px;font-family:'Poppins',sans-serif;resize:none;height:60px;background:var(--s2)"></textarea>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+      <button class="btn" onclick="cancelReject()">Cancelar</button>
+      <button class="btn btn-red" onclick="confirmReject()">Confirmar Descarte</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL EXPORTAR EXCEL -->
+<div id="mo-export" onclick="if(event.target.id==='mo-export')closeExport()">
+  <div class="export-box">
+    <div class="mo-hdr">
+      <div class="mo-title">📊 Exportar a Excel</div>
+      <button class="mo-x" onclick="closeExport()">&#x2715;</button>
+    </div>
+    <div class="export-sel-bar">
+      <button onclick="exportSelAll(true)">✓ Seleccionar todo</button>
+      <button onclick="exportSelAll(false)">✗ Limpiar</button>
+      <span class="export-count" id="exp-count"></span>
+    </div>
+    <div class="export-cols" id="exp-cols"></div>
+    <div class="mo-ftr">
+      <button class="btn" onclick="closeExport()">Cancelar</button>
+      <button class="btn btn-blue" onclick="doExportXLSX()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar XLSX
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════ -->
+<script>
+const API='https://script.google.com/macros/s/AKfycbymlWBLwqicUxts2K3sbrb_owt0ESOCY-bAz9G_8LQ3UAwLrXuP7Gs2EEXZRcTRbBQt/exec';
+
+const ETAPAS=['Contacto Inicial','Seguimiento','Reunión de Exploración','Sesión Diagnóstico','Cerrado'];
+const ECOLORS={'Contacto Inicial':'#c8cdd4','Seguimiento':'#1762b3','Reunión de Exploración':'#d07b10','Sesión Diagnóstico':'#17a06b','Cerrado':'#6b3fa0'};
+const ENCS=['Tifany'];
+const KAMS=['Raul Izquierdo','Ximena Cerdán','Delia Vasquez','Walter Patiño'];
+const EVENTOS=['Inbound','Outbound','SAP','Campaña'];
+let campanas=[];
+const STATUS_OPTIONS=['ABIERTO','HOLD','REJECT'];
+const COND_OPTS=['PRICO','Agente de Retención','Agente de Percepción','Buen Contribuyente','Regular','Otro'];
+
+// calls layout:
+// [0-5]  = Llamadas/WhatsApp (LW1..LW6)
+// [6-11] = Correos Enviados  (E1..E6)
+const LW_IDX=[0,1,2,3,4,5];
+const TH_FILTERS={evento:null,kam:null,status:null};
+const TH_OPTIONS_MAP={
+  evento:['Inbound','Outbound','SAP','Campaña'],
+  kam:['Raul Izquierdo','Ximena Cerdán','Delia Vasquez','Walter Patiño'],
+  status:['ABIERTO','HOLD','REJECT'],
+};
+const EM_IDX=[6,7,8,9,10,11];
+
+let leads=[],filtered=[],tab='tabla',histLead=null,editId=null;
+let _ec=[],_ecanal=[],_etmp=[],_econt=[],empId=null;
+let _modalMode='view'; // 'view' | 'edit' | 'new'
+let dateModalConfig={};
+
+/* ── Helpers ── */
+function pad(n){return String(n).padStart(2,'0')}
+function nowTs(){const d=new Date();return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+String(d.getFullYear()).slice(2)+' '+pad(d.getHours())+':'+pad(d.getMinutes())}
+function cleanTs(ts){if(!ts)return'';if(ts.includes('T')){const d=new Date(ts);return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+String(d.getFullYear()).slice(2)+' '+pad(d.getHours())+':'+pad(d.getMinutes());}return ts;}
+function today(){const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function fmt(iso){if(!iso||iso.length<10)return'—';const[y,m,d]=iso.slice(0,10).split('-');return d+'/'+m+'/'+String(y).slice(2)}
+function upper(s){return(s||'').toUpperCase()}
+function semHex(s){return s==='g'?'#17a06b':s==='o'?'#d07b10':'#d03c3c'}
+function statusBarClass(s){if(!s)return'open';const u=s.toUpperCase();if(u==='HOLD')return'hold';if(u==='REJECT')return'reject';return'open';}
+function sC(s){return s==='g'?'lg':s==='o'?'lo':'lr'}
+function cC(s){return s==='g'?'cg':s==='o'?'co':'cr'}
+function cL(s){return s==='g'?'Activo':s==='o'?'Recontactar':'Sin contacto'}
+function tI(t){const m=(t||'').toLowerCase();if(m.includes('llamada')||m.includes('whatsapp'))return'📞';if(m.includes('linkedin'))return'💼';if(m.includes('correo'))return'✉️';if(m.includes('reunión')||m.includes('reunion'))return'🤝';if(m.includes('diagnóstico')||m.includes('diagnostico'))return'🔍';if(m.includes('tarea'))return'✅';return'📝'}
+function tC(t){const m=(t||'').toLowerCase();if(m.includes('llamada')||m.includes('whatsapp'))return'#1762b3';if(m.includes('linkedin'))return'#0a66c2';if(m.includes('correo'))return'#17a06b';if(m.includes('reunión'))return'#d07b10';if(m.includes('diagnóstico'))return'#6b3fa0';return'#99a4b0'}
+function tCls(t){const m=(t||'').toLowerCase();if(m.includes('llamada')||m.includes('whatsapp'))return'tl';if(m.includes('correo'))return'tw';if(m.includes('reunión'))return'tr';if(m.includes('diagnóstico'))return'td';return''}
+function encChip(e){if(!e)return'';return`<span class="enc-chip" style="background:#fce4f6;color:#7a1f66">${e}</span>`;}
+
+function toast(msg,type='ok'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+type;setTimeout(()=>t.className='toast',2800)}
+function loading(on){document.getElementById('lbar').className='loading-bar'+(on?'':' hidden')}
+
+/* ── Progreso LW / Email en tabla (mini viñetas) ── */
+function miniProgress(calls,indices,colorOn,colorOff){
+  const pips=indices.map(i=>`<span class="mini-pip" style="background:${calls[i]?colorOn:colorOff}"></span>`).join('');
+  const done=indices.filter(i=>calls[i]).length;
+  return `<div class="mini-prog"><div class="mini-prog-bar">${pips}</div><span style="color:${done>0?colorOn:'var(--text3)'}">${done}/${indices.length}</span></div>`;
+}
+
+/* ── API ── */
+async function apiCall(body){
+  const r=await fetch(API,{method:'POST',body:JSON.stringify(body)});
+  return r.json();
+}
+
+async function loadLeads(){
+  loading(true);
+  try{
+    const d=await fetch(API+'?action=getAll').then(r=>r.json());
+    if(d.error)throw new Error(d.error);
+    leads=(d.leads||[]).map(norm);
+    // Load campanas too
+    try{
+      const dc=await fetch(API+'?action=getCampanas').then(r=>r.json());
+      campanas=(dc.campanas||[]);
+      TH_OPTIONS_MAP.evento=['Inbound','Outbound','SAP',...campanas.map(c=>c.nombre)];
+    }catch(_){}
+    try{
+      const de=await fetch(API+'?action=getEventos').then(r=>r.json());
+      eventosC=(de.eventos||[]).filter(e=>e.nombre).map(e=>({...e,id:e.id||e.nombre+Date.now()}));
+    }catch(_){}
+    filterAll();
+    renderAll();
+    toast('✓ '+leads.length+' leads cargados','ok');
+  }catch(e){toast('Error: '+e.message,'err');}
+  loading(false);
+}
+
+function norm(l){
+  if(!Array.isArray(l.calls))l.calls=new Array(12).fill(0);
+  while(l.calls.length<12)l.calls.push(0);
+  l.calls=l.calls.map(Number);
+  if(!Array.isArray(l.canal))l.canal=[];
+  if(!Array.isArray(l.hist))l.hist=[];
+  if(!l.bant)l.bant={b:'',a:'',n:'',t:''};
+  if(!l.empresa||typeof l.empresa!=='object'||Array.isArray(l.empresa))l.empresa={ruc:'',condicion:[],facturacion:'',contactos:[]};
+  if(!Array.isArray(l.empresa.contactos))l.empresa.contactos=[];
+  if(!Array.isArray(l.empresa.condicion))l.empresa.condicion=l.empresa.condicion?[l.empresa.condicion]:[];
+  l.reunion=l.reunion===true||l.reunion==='1'||l.reunion===1;
+  l.diag=l.diag===true||l.diag==='1'||l.diag===1;
+  // Derive sem from status for consistency
+  if(l.status==='ABIERTO')l.sem='g';
+  else if(l.status==='HOLD')l.sem='o';
+  else if(l.status==='REJECT')l.sem='r';
+  else if(!l.sem)l.sem='r';
+  if(!l.etapa)l.etapa='Contacto Inicial';
+  if(!l.encargado)l.encargado='';
+  if(!l.evento)l.evento='';
+  if(!l.kam)l.kam='';
+  if(!l.linkedin)l.linkedin='';
+  if(!l.status)l.status='ABIERTO';
+  if(!l.reunion_date)l.reunion_date='';
+  if(!l.diag_date)l.diag_date='';
+  if(!l.nombre_lead)l.nombre_lead='';
+  l.razon=upper(l.razon);
+  if(!l.reject_reason)l.reject_reason='';
+  if(!Array.isArray(l.tags))l.tags=[];
+  if(!Array.isArray(l.eventos_c))l.eventos_c=[];
+  if(l.c4c===undefined)l.c4c=false;
+  if(l.c4c===undefined)l.c4c=false;
+  if(!l.campana)l.campana='';
+  if(!['Inbound','Outbound','SAP','Campaña',''].includes(l.evento)&&campanas.some(c=>c.nombre===l.evento)){
+    l.campana=l.evento;l.evento='Campaña';
+  }
+  return l;
+}
+
+async function saveLead(lead){
+  lead.razon=upper(lead.razon);
+  loading(true);
+  try{
+    const r=await apiCall({action:'save',lead});
+    if(r.error)throw new Error(r.error);
+    const i=leads.findIndex(x=>String(x.id)===String(lead.id));
+    if(i>-1)leads[i]=norm(lead);else leads.push(norm(lead));
+    if(typeof filterAll==='function')filterAll();else{filtered=leads.slice();}
+    renderAll();
+    toast('✓ Guardado: '+lead.razon,'ok');
+  }catch(e){toast('Error al guardar: '+e.message,'err');}
+  loading(false);
+}
+
+function confirmDelete(){
+  return new Promise(resolve=>{
+    const ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;display:flex;align-items:center;justify-content:center';
+    ov.innerHTML=`<div style="background:var(--surface);border-radius:12px;padding:24px 28px;max-width:340px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.18);border:1px solid var(--border)">
+      <div style="font-size:15px;font-weight:700;margin-bottom:8px">¿Eliminar lead?</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:20px;line-height:1.5">Esta acción no se puede deshacer. El lead será eliminado del Sheet.</div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button id="cd-cancel" style="padding:7px 16px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer">Cancelar</button>
+        <button id="cd-confirm" style="padding:7px 16px;border-radius:8px;border:none;background:var(--red);color:#fff;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer">Sí, eliminar</button>
+      </div>
+    </div>`;
+    document.body.appendChild(ov);
+    document.getElementById('cd-cancel').onclick=()=>{ov.remove();resolve(false);};
+    document.getElementById('cd-confirm').onclick=()=>{ov.remove();resolve(true);};
+    ov.onclick=(e)=>{if(e.target===ov){ov.remove();resolve(false);}};
+  });
+}
+
+/* ── moConfirm: reemplaza window.confirm nativo ── */
+let _moConfirmResolve=null;
+function moConfirm(title,msg,okLabel='Eliminar'){
+  return new Promise(resolve=>{
+    _moConfirmResolve=resolve;
+    document.getElementById('mo-confirm-title').textContent=title;
+    document.getElementById('mo-confirm-msg').textContent=msg||'';
+    document.getElementById('mo-confirm-ok').textContent=okLabel;
+    document.getElementById('mo-confirm').style.display='flex';
+  });
+}
+function moConfirmResolve(val){
+  document.getElementById('mo-confirm').style.display='none';
+  if(_moConfirmResolve){_moConfirmResolve(val);_moConfirmResolve=null;}
+}
+
+async function deleteLead(id){
+  const ok=await confirmDelete();if(!ok)return;
+  loading(true);
+  try{
+    const r=await apiCall({action:'delete',id:String(id)});
+    if(r.error)throw new Error(r.error);
+    leads=leads.filter(x=>String(x.id)!==String(id));
+    if(typeof filterAll==='function')filterAll();else{filtered=leads.slice();}
+    renderAll();
+    toast('Lead eliminado','ok');
+  }catch(e){toast('Error: '+e.message,'err');}
+  loading(false);
+}
+
+/* ── Render ── */
+function renderAll(){renderAgenda();renderStats();if(tab==='tabla')renderTabla();else if(tab==='kanban')renderKanban();else if(tab==='historial')renderHistorial();else if(tab==='tareas')renderTareas();else if(tab==='dashboard')renderDashboard();else if(tab==='campanas')renderCampanas();else if(tab==='eventos')renderEventos();}
+
+function renderAgenda(){
+  const td=today();
+  const p=leads.filter(l=>l.next&&l.next<=td&&l.sem!=='r').length;
+  const sf=leads.filter(l=>{if(!l.hist||!l.hist.length)return false;const last=l.hist[l.hist.length-1].ts.slice(0,10);return Math.round((new Date(td)-new Date(last))/864e5)>5&&l.sem!=='r';}).length;
+  const re=leads.filter(l=>l.reunion&&!l.diag).length;
+  document.getElementById('agenda').innerHTML=`📅 <strong>Hoy ${fmt(td)}:</strong><span class="a-pip"></span><span style="color:var(--red);font-weight:600">${p} seguimientos vencidos</span><span class="a-pip"></span>${re} en exploración<span class="a-pip"></span><span style="color:var(--orange)">${sf} sin interacción +5 días</span>`;
+}
+
+function renderStats(){
+  const g=leads.filter(l=>l.sem==='g').length;
+  const o=leads.filter(l=>l.sem==='o').length;
+  const r=leads.filter(l=>l.sem==='r').length;
+  const recon=leads.filter(l=>l.sem==='o').length;
+  const sc=leads.filter(l=>l.reunion).length;
+  const diags=leads.filter(l=>l.diag).length;
+  const c4cTotal=leads.filter(l=>l.c4c).length;
+  const el=document.getElementById('stats');
+  if(!el)return;
+  el.innerHTML=`
+    <div class="sc"><div class="sc-lbl">TOTAL</div><div class="sc-val">${leads.length}</div></div>
+    <div class="sc"><div class="sc-lbl">ACTIVOS</div><div class="sc-val g">${g}</div></div>
+    <div class="sc"><div class="sc-lbl">RECONTACTAR</div><div class="sc-val o">${recon}</div></div>
+    <div class="sc"><div class="sc-lbl">SIN CONTACTO</div><div class="sc-val r">${r}</div></div>
+    <div class="sc"><div class="sc-lbl">EXPLORACIÓN</div><div class="sc-val b">${sc}</div></div>
+    <div class="sc"><div class="sc-lbl">DIAGNÓST.</div><div class="sc-val" style="color:var(--purple)">${diags}</div></div>
+    <div class="sc"><div class="sc-lbl">EN C4C</div><div class="sc-val" style="color:var(--blue)">${c4cTotal}</div></div>
+  `;
+}
+
+function toggleThFilter(e,key){
+  e.stopPropagation();
+  Object.keys(TH_OPTIONS_MAP).forEach(k=>{if(k!==key){const m=document.getElementById('thfm-'+k);if(m)m.classList.remove('open');}});
+  const menu=document.getElementById('thfm-'+key);
+  if(!menu)return;
+  buildThMenus();
+  menu.classList.toggle('open');
+}
+
+function setThFilter(key,val){
+  TH_FILTERS[key]=(TH_FILTERS[key]===val)?null:val;
+  const btn=document.getElementById('thfbtn-'+key);
+  if(btn)btn.classList.toggle('active',!!TH_FILTERS[key]);
+  const menu=document.getElementById('thfm-'+key);
+  if(menu)menu.classList.remove('open');
+  filterAll();
+}
+
+document.addEventListener('click',()=>{
+  Object.keys(TH_OPTIONS_MAP).forEach(k=>{const m=document.getElementById('thfm-'+k);if(m)m.classList.remove('open');});
+});
+
+/* ── filterAll early definition ── */
+function filterAll(){
+  const q=(document.getElementById('q')||{value:''}).value.toLowerCase();
+  const sv=(document.getElementById('f-sem')||{value:''}).value;
+  const se=(document.getElementById('f-etapa')||{value:''}).value;
+  const thEv=TH_FILTERS.evento;
+  const thKam=TH_FILTERS.kam;
+  const thSt=TH_FILTERS.status;
+  filtered=leads.filter(l=>{
+    const m=!q||(l.razon+' '+l.contacto+' '+l.apellido+' '+l.tel+' '+(l.status||'')+' '+(l.evento||'')+' '+(l.kam||'')+' '+(l.nombre_lead||'')).toLowerCase().includes(q);
+    const st=!sv||(sv==='g'?l.status==='ABIERTO':sv==='o'?l.status==='HOLD':l.status==='REJECT');
+    const thEvM=!thEv||l.evento===thEv;
+    const thKamM=!thKam||l.kam===thKam;
+    const thStM=!thSt||l.status===thSt;
+    return m&&st&&(!se||l.etapa===se)&&thEvM&&thKamM&&thStM;
+  });
+  if(tab==='tabla')renderTabla();else if(tab==='kanban')renderKanban();
+}
+
+/* ── Tabla principal — SIN círculos, CON mini-progreso ── */
+function renderTabla(){
+  const tb=document.getElementById('tbody');
+  if(!filtered.length){tb.innerHTML=`<tr><td colspan="14" style="text-align:center;padding:30px;color:var(--text3)">Sin leads. Usa "Nuevo Lead" para agregar.</td></tr>`;return;}
+  tb.innerHTML=filtered.map(l=>`<tr style="cursor:pointer" onclick="openView('${l.id}')">
+    <td style="padding:0;width:3px" onclick="event.stopPropagation()"><span class="status-bar status-bar-${statusBarClass(l.status)}"></span></td>
+    <td onclick="event.stopPropagation()">
+      <span class="rz-link" title="Ver empresa" onclick="openEmp('${l.id}')">${l.razon||'—'}</span>${l.c4c?'<span style="font-size:8px;background:#e8f4fd;color:#0052cc;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">C4C</span>':''}
+      <br><span style="font-size:9px;color:var(--text3)">${l.etapa||''}</span>
+    </td>
+    <td><div class="cn">${l.contacto||''}${l.apellido?' '+l.apellido:''}</div><div class="cc">${l.cargo||''}</div></td>
+    <td onclick="event.stopPropagation()"><div class="tel-stack">${(l.tel||'').split('/').map(t=>t.trim()).filter(Boolean).map(t=>`<span>${t}</span>`).join('')||'<span style="color:var(--text3)">—</span>'}</div></td>
+    <td style="font-size:10px">${l.evento||'—'}</td>
+    <td style="font-size:10px">${l.kam||'—'}</td>
+    <td style="text-align:center"><span style="font-size:10px;font-weight:700;color:var(--blue)">${(l.hist||[]).filter(h=>h.tipo?.includes('Llamada')||h.tipo?.includes('WhatsApp')).length}</span></td>
+    <td style="text-align:center"><span style="font-size:10px;font-weight:700;color:var(--green)">${(l.hist||[]).filter(h=>h.tipo?.includes('Correo')).length}</span></td>
+    <td style="text-align:center" onclick="event.stopPropagation()"><span class="sdot ${l.reunion?'sg':''}" onclick="event.stopPropagation();openDateModal('${l.id}','reunion')" title="${l.reunion?'Sí · '+fmt(l.reunion_date):'Pendiente'}" style="cursor:pointer"></span>${l.reunion?`<span style="font-size:9px;color:var(--green);display:block;margin-top:2px">${fmt(l.reunion_date)}</span>`:''}</td>
+    <td style="text-align:center" onclick="event.stopPropagation()"><span class="sdot ${l.diag?'sb':''}" onclick="event.stopPropagation();openDateModal('${l.id}','diag')" title="${l.diag?'Sí · '+fmt(l.diag_date):'Pendiente'}" style="cursor:pointer"></span>${l.diag?`<span style="font-size:9px;color:var(--blue);display:block;margin-top:2px">${fmt(l.diag_date)}</span>`:''}</td>
+    <td><span class="chip ${cC(l.sem)}">${l.status}</span></td>
+    <td><span style="font-size:10px;color:var(--text2);font-weight:500">${fmt(l.next)}</span></td>
+
+    <td style="white-space:nowrap" onclick="event.stopPropagation()">
+      <button class="ibt" onclick="openEdit('${l.id}')" title="Editar">✏️</button>
+      <button class="del-btn" onclick="deleteLead('${l.id}')" title="Eliminar">🗑</button>
+    </td>
+  </tr>`).join('');
+}
+
+/* ── Fecha modal (desde tabla) ── */
+function openDateModal(id,type){
+  const l=leads.find(x=>String(x.id)===String(id));if(!l)return;
+  dateModalConfig={id,type};
+  document.getElementById('date-modal-title').textContent=type==='reunion'?'Fecha de Exploración':'Fecha de Diagnóstico';
+  document.getElementById('date-modal-input').value=(type==='reunion'?l.reunion_date:l.diag_date)||today();
+  document.getElementById('date-modal').classList.add('open');
+}
+function closeDateModal(){document.getElementById('date-modal').classList.remove('open');dateModalConfig={};}
+async function saveDateSelection(){
+  const date=document.getElementById('date-modal-input').value;
+  const {id,type}=dateModalConfig;
+  const l=leads.find(x=>String(x.id)===String(id));if(!l)return;
+  if(type==='reunion'){
+    l.reunion=true;l.reunion_date=date;l.etapa='Reunión de Exploración';
+    if(!l.hist)l.hist=[];
+    l.hist.push({ts:nowTs(),tipo:'Reunión',nota:`Exploración agendada para ${fmt(date)}`,exec_date:date});
+  }else{
+    l.diag=true;l.diag_date=date;l.etapa='Sesión Diagnóstico';
+    if(!l.hist)l.hist=[];
+    l.hist.push({ts:nowTs(),tipo:'Diagnóstico',nota:`Diagnóstico 360° agendado para ${fmt(date)}`,exec_date:date});
+  }
+  await saveLead(l);closeDateModal();
+}
+
+/* ── Kanban ── */
+function renderKanban(){
+  document.getElementById('kboard').innerHTML=ETAPAS.map(col=>{
+    const cards=filtered.filter(l=>l.etapa===col),color=ECOLORS[col]||'#ccc';
+    return`<div class="kb-col"><div class="kb-head" style="border-top-color:${color}">
+      <span style="font-size:11.5px;font-weight:700">${col}</span><span class="kb-cnt">${cards.length}</span></div>
+      <div class="kb-cards">${cards.length?cards.map(l=>`
+        <div class="kb-card" onclick="openView('${l.id}')">
+          <div class="kb-card-top"><span class="led ${sC(l.sem)}"></span><span class="kb-card-name">${l.razon||'—'}</span></div>
+          <div class="kb-card-contact">${l.contacto||''}${l.apellido?' '+l.apellido:''}</div>
+          <div class="kb-card-bot"><span class="chip ${cC(l.sem)}">${l.status}</span>${nextFutureAction(l)?`<span style="font-size:10px;color:var(--blue);font-weight:600">📅 ${fmt(nextFutureAction(l))}</span>`:''}</div>
+        </div>`).join(''):`<div class="empty-k">Sin leads</div>`}
+      </div></div>`;
+  }).join('');
+}
+
+/* ── Historial ── */
+function renderHistorial(){
+  const q=(document.getElementById('hq').value||'').toLowerCase();
+  const wh=leads.filter(l=>l.hist&&l.hist.length>0);
+  document.getElementById('hlist').innerHTML=wh.length?wh.map(l=>`
+    <div class="hist-lead-item${histLead===l.id?' active':''}" onclick="selectHL('${l.id}')">
+      <span class="led ${sC(l.sem)}"></span>
+      <div style="flex:1;min-width:0"><div class="hli-name">${l.razon}</div><div class="hli-sub">${l.contacto||''}</div></div>
+      <span class="hli-cnt">${l.hist.length}</span>
+    </div>`).join(''):'<div style="padding:20px;color:var(--text3);font-size:12px;text-align:center">Sin historial</div>';
+  const tc=document.getElementById('htl');
+  if(!histLead){tc.innerHTML=`<div class="tl-empty"><div style="font-size:32px;margin-bottom:8px">📋</div><strong>Selecciona un lead</strong><div style="font-size:11px;color:var(--text3);margin-top:4px">Click en la lista de la izquierda</div></div>`;return;}
+  const l=leads.find(x=>String(x.id)===String(histLead));if(!l){tc.innerHTML='';return;}
+  const items=(l.hist||[]).slice().reverse().filter(h=>!q||h.nota.toLowerCase().includes(q)||h.tipo.toLowerCase().includes(q));
+  tc.innerHTML=`
+    <div class="hist-tl-hdr">
+      <div><div class="hist-tl-title">${l.razon}</div><div class="hist-tl-sub">${l.contacto||''} · ${(l.hist||[]).length} interacciones</div></div>
+      <span class="chip ${cC(l.sem)}">${l.status}</span>
+    </div>
+    <div class="timeline">${items.length?items.map((h,ri)=>{const oi=(l.hist||[]).length-1-ri;return`
+      <div class="tl-item">
+        <div class="tl-icon" style="background:${tC(h.tipo)}22;border-color:${tC(h.tipo)}44">${tI(h.tipo)}</div>
+        <div class="tl-body">
+          <div class="tl-meta">📅 ${cleanTs(h.ts)}<button class="tl-del" style="margin-left:4px" onclick="editHistItem('${l.id}',${oi})">✏️</button><button class="tl-del" onclick="delHistItem('${l.id}',${oi})">🗑</button></div>
+          ${h.exec_date?`<div class="tl-exec-date">Ejecución: ${fmt(h.exec_date)}</div>`:''}
+          <div class="tl-tipo">${h.tipo}</div>
+          <div class="tl-nota">${h.nota}</div>
+        </div>
+      </div>`;}).join(''):`<div class="tl-empty">Sin resultados</div>`}
+    </div>
+    <div class="add-hist-bar">
+      <select id="ahtype"><option>Llamada/WhatsApp</option><option>Correo Enviado</option><option>LinkedIn</option><option>Reunión</option><option>Diagnóstico</option><option>Tarea</option><option>Nota</option></select>
+      <input type="date" id="ahfecha" style="max-width:130px">
+      <input type="text" id="ahnota" placeholder="Describe la interacción..." onkeydown="if(event.key==='Enter')addHistNota('${l.id}')">
+      <button class="btn btn-blue" onclick="addHistNota('${l.id}')">Agregar</button>
+    </div>`;
+}
+function selectHL(id){histLead=id;renderHistorial();}
+async function delHistItem(lid,idx){
+  const ok=await moConfirm('¿Eliminar nota?','Esta acción no se puede deshacer.');
+  if(!ok)return;
+  const l=leads.find(x=>String(x.id)===String(lid));if(!l||!l.hist)return;
+  l.hist.splice(idx,1);await saveLead(l);renderHistorial();
+}
+async function addHistNota(id){
+  const nota=document.getElementById('ahnota').value.trim();if(!nota)return;
+  const tipo=document.getElementById('ahtype').value;
+  const fecha=document.getElementById('ahfecha').value;
+  const l=leads.find(x=>String(x.id)===String(id));if(!l)return;
+  if(!l.hist)l.hist=[];
+  l.hist.push({ts:nowTs(),tipo,nota,exec_date:fecha});
+  document.getElementById('ahnota').value='';
+  document.getElementById('ahfecha').value='';
+  await saveLead(l);renderHistorial();
+}
+
+/* ── Tareas ── */
+function renderTareas(){
+  const td=today(),ef=document.getElementById('tenc').value;
+  const src=leads.slice();
+  const urg=src.filter(l=>l.next&&l.next<td);
+  const hoy=src.filter(l=>l.next===td);
+  const prx=src.filter(l=>l.next&&l.next>td).sort((a,b)=>a.next.localeCompare(b.next));
+  const sf=src.filter(l=>!l.next&&l.sem!=='r');
+  const tareasHist=[];
+  src.forEach(l=>{
+    (l.hist||[]).forEach(h=>{
+      if((h.tipo==='Tarea'||h.tipo==='Llamada/WhatsApp'||h.tipo==='Correo Enviado'||h.tipo==='Reunión'||h.tipo==='Diagnóstico')&&h.exec_date){
+        tareasHist.push({lead:l,nota:h.nota,fecha:h.exec_date,ts:h.ts,tipo:h.tipo,vencida:h.exec_date<td,hoy_t:h.exec_date===td});
+      }
+    });
+  });
+  tareasHist.sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  document.getElementById('ttop').innerHTML=`
+    <div class="tarea-card"><div class="tarea-icon" style="background:var(--rbg)">🚨</div><div><div class="tarea-label">Vencidas</div><div class="tarea-val" style="color:var(--red)">${urg.length}</div></div></div>
+    <div class="tarea-card"><div class="tarea-icon" style="background:var(--obg)">📅</div><div><div class="tarea-label">Para Hoy</div><div class="tarea-val" style="color:var(--orange)">${hoy.length}</div></div></div>
+    <div class="tarea-card"><div class="tarea-icon" style="background:var(--gbg)">📆</div><div><div class="tarea-label">Próximas</div><div class="tarea-val" style="color:var(--green)">${prx.length}</div></div></div>
+    <div class="tarea-card"><div class="tarea-icon" style="background:var(--s3)">⏳</div><div><div class="tarea-label">Sin Fecha</div><div class="tarea-val" style="color:var(--text2)">${sf.length}</div></div></div>`;
+  function mkCard(l,cls,dc){return`<div class="tk-card ${cls}" onclick="openTaskAction('${l.id}')">
+    <div class="tk-card-name"><span class="led ${sC(l.sem)}" style="margin-right:4px"></span>${l.razon||'—'}</div>
+    <div class="tk-card-contact">${l.contacto||'Sin contacto'}</div>
+    ${l.next_tipo?`<div style="font-size:10px;color:var(--text2);margin-top:2px">${tI(l.next_tipo)} <span style="font-weight:600">${l.next_tipo}</span></div>`:''}
+    <div class="tk-card-date" style="color:${dc}">📅 ${fmt(l.next)||'Sin fecha'} &nbsp;<span class="chip ${cC(l.sem)}">${l.etapa}</span></div>
+  </div>`;}
+  const cols=[{t:'🚨 Vencidas',c:'#d03c3c',items:urg,cls:'urgente',dc:'var(--red)'},{t:'📅 Para Hoy',c:'#d07b10',items:hoy,cls:'hoy',dc:'var(--orange)'},{t:'📆 Próximas',c:'#17a06b',items:prx,cls:'prox',dc:'var(--green)'},{t:'⏳ Sin Fecha',c:'#99a4b0',items:sf,cls:'',dc:'var(--text3)'}];
+  document.getElementById('tkboard').innerHTML=cols.map(col=>`<div class="tk-col"><div class="tk-head" style="border-top-color:${col.c}"><span style="font-size:11.5px;font-weight:700">${col.t}</span><span class="kb-cnt">${col.items.length}</span></div><div class="tk-cards">${col.items.length?col.items.map(l=>mkCard(l,col.cls,col.dc)).join(''):`<div class="empty-k">Sin tareas</div>`}</div></div>`).join('');
+  const thEl=document.getElementById('tareas-hist');
+  if(thEl){
+    thEl.innerHTML=tareasHist.length?tareasHist.map(t=>`
+      <div class="tk-card ${t.vencida?'urgente':t.hoy_t?'hoy':'prox'}" onclick="openView('${t.lead.id}')" style="display:flex;gap:10px;align-items:flex-start">
+        <div style="flex:1">
+          <div class="tk-card-name"><span class="led ${sC(t.lead.sem)}" style="margin-right:4px"></span>${t.lead.razon}</div>
+          <div class="tk-card-contact">${t.lead.contacto||''}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">${t.tipo}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:3px">${t.nota}</div>
+        </div>
+        <div style="font-size:10px;font-weight:700;white-space:nowrap;color:${t.vencida?'var(--red)':t.hoy_t?'var(--orange)':'var(--green)'}">${fmt(t.fecha)}</div>
+      </div>`).join(''):'<div class="empty-k">Sin tareas asignadas en historial</div>';
+  }
+}
+
+/* ── Dashboard ── */
+function renderDashboard(){
+  const tL=leads.length;
+  const fL=0;
+  const total=leads.length;
+  const activos=leads.filter(l=>l.sem==='g').length;
+  const hold=leads.filter(l=>l.sem==='o').length;
+  const reject=leads.filter(l=>l.sem==='r').length;
+  const conExpl=leads.filter(l=>l.reunion).length;
+  const conDiag=leads.filter(l=>l.diag).length;
+  const totalHist=leads.reduce((a,l)=>a+(l.hist||[]).length,0);
+  const inbound=leads.filter(l=>l.evento==='Inbound'||l.evento==='SAP');
+  const outbound=leads.filter(l=>l.evento==='Outbound'||l.evento==='Campaña');
+  const sinEvento=leads.filter(l=>!l.evento);
+  // KPI rates
+  const tasaExpl=total>0?Math.round(conExpl/total*100):0;
+  const tasaDiag=total>0?Math.round(conDiag/total*100):0;
+  const tasaRej=total>0?Math.round(reject/total*100):0;
+  const c4c=leads.filter(l=>l.tags&&l.tags.some&&l.tags.some(t=>t.label.toLowerCase().includes('c4c'))).length;
+  // Contact attempts
+  const conCallHist=leads.filter(l=>(l.hist||[]).some(h=>h.tipo==='Llamada/WhatsApp')).length;
+  const tasaContacto=total>0?Math.round(conCallHist/total*100):0;
+  // Outbound Diag360
+  const out360=outbound.filter(l=>l.campana&&(l.campana.toLowerCase().includes('360')||l.campana.toLowerCase().includes('diagnóstico')));
+  const out360Expl=out360.filter(l=>l.reunion).length;
+  const tasaOut360=out360.length>0?Math.round(out360Expl/out360.length*100):0;
+  // LinkedIn contacted
+  const linkedinHist=leads.filter(l=>(l.hist||[]).some(h=>h.tipo==='LinkedIn')).length;
+  // Cold leads (no activity > 14 days)
+  const now14=new Date();now14.setDate(now14.getDate()-14);
+  const frios=leads.filter(l=>l.sem==='g'&&(!(l.hist&&l.hist.length)||(()=>{const last=l.hist[l.hist.length-1];return last&&new Date(last.ts)<now14;})()));
+
+  document.getElementById('kpis').innerHTML=`
+    <div class="kpi"><div class="kpi-val">${total}</div><div class="kpi-lbl">Total Leads</div></div>
+    <div class="kpi" style="border-color:var(--green)"><div class="kpi-val g">${activos}</div><div class="kpi-lbl">Activos</div></div>
+    <div class="kpi" style="border-color:var(--orange)"><div class="kpi-val o">${hold}</div><div class="kpi-lbl">HOLD</div></div>
+    <div class="kpi" style="border-color:var(--red)"><div class="kpi-val r">${reject}</div><div class="kpi-lbl">REJECT (${tasaRej}%)</div></div>
+    <div class="kpi" style="border-color:var(--blue)"><div class="kpi-val b">${conExpl}</div><div class="kpi-lbl">Exploración (${tasaExpl}%)</div></div>
+    <div class="kpi" style="border-color:var(--purple)"><div class="kpi-val" style="color:var(--purple)">${conDiag}</div><div class="kpi-lbl">Diagnóstico 360° (${tasaDiag}%)</div></div>
+    <div class="kpi"><div class="kpi-val">${totalHist}</div><div class="kpi-lbl">Interacciones</div></div>
+    <div class="kpi" style="border-color:#e67e22"><div class="kpi-val" style="color:#e67e22">${frios.length}</div><div class="kpi-lbl">Leads Fríos +14d</div></div>
+    <div class="kpi" style="border-color:#0a66c2"><div class="kpi-val" style="color:#0a66c2">${linkedinHist}</div><div class="kpi-lbl">Contactados LinkedIn</div></div>
+    <div class="kpi" style="border-color:var(--green)"><div class="kpi-val" style="color:var(--green)">${tasaContacto}%</div><div class="kpi-lbl">Tasa Contacto</div></div>`;
+
+  // Inbound vs Outbound KPIs
+  const dInOut=document.getElementById('dinout');
+  if(dInOut){
+    const ib=inbound.length,ob=outbound.length,se=sinEvento.length;
+    const ibExpl=inbound.filter(l=>l.reunion).length,obExpl=outbound.filter(l=>l.reunion).length;
+    dInOut.innerHTML=`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div style="background:var(--bbg);border-radius:var(--r);padding:12px">
+          <div style="font-size:10px;font-weight:700;color:var(--btxt);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">📥 Inbound / SAP</div>
+          <div style="font-size:22px;font-weight:700;color:var(--blue)">${ib}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">Exploración: ${ibExpl} (${ib>0?Math.round(ibExpl/ib*100):0}%)</div>
+          <div style="font-size:10px;color:var(--text3)">Con Diag: ${inbound.filter(l=>l.diag).length}</div>
+        </div>
+        <div style="background:#fff8e6;border-radius:var(--r);padding:12px">
+          <div style="font-size:10px;font-weight:700;color:var(--otxt);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">📤 Outbound / Campaña</div>
+          <div style="font-size:22px;font-weight:700;color:var(--orange)">${ob}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">Exploración: ${obExpl} (${ob>0?Math.round(obExpl/ob*100):0}%)</div>
+          <div style="font-size:10px;color:var(--text3)">Diag 360°: ${out360.length} → ${out360Expl} Expl (${tasaOut360}%)</div>
+        </div>
+      </div>
+      <div style="margin-top:8px;font-size:10px;color:var(--text3);text-align:center">Sin clasificar: ${se} leads</div>`;
+  }
+
+  // Encargado bar (solo Tifany ahora)
+  const mx2=Math.max(...ETAPAS.map(e=>leads.filter(l=>l.etapa===e).length),1);
+  document.getElementById('detapa').innerHTML=ETAPAS.map(e=>{const v=leads.filter(l=>l.etapa===e).length,c=ECOLORS[e]||'#ccc';return`<div class="bar-row"><div class="bar-label">${e.replace('Reunión de Exploración','Exploración').replace('Sesión Diagnóstico','Diagnóst.')}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/mx2*100)}%;background:${c}">${v||''}</div></div><div class="bar-count">${v}</div></div>`;}).join('');
+  const holds=leads.filter(l=>l.status==='HOLD').length;
+  const holdToExpl=leads.filter(l=>l.status==='HOLD'&&l.reunion).length;
+  document.getElementById('dreact').innerHTML=[{n:'HOLD',c:holds},{n:'→ Exploración',c:holdToExpl}].map(d=>`<div class="bar-row"><div class="bar-label">${d.n}</div><div class="bar-track"><div class="bar-fill" style="width:${holds>0?Math.round(d.c/holds*100):0}%;background:var(--orange)">${d.c||''}</div></div><div class="bar-count">${d.c}</div></div>`).join('');
+  const rejectLeads=leads.filter(l=>l.status==='REJECT'&&l.reject_reason);
+  const reasonCounts={};
+  rejectLeads.forEach(l=>{const r=(l.reject_reason||'').split(' — ')[0];reasonCounts[r]=(reasonCounts[r]||0)+1;});
+  const totalReject=leads.filter(l=>l.status==='REJECT').length;
+  const eldr=document.getElementById('dreject');
+  if(eldr){const sortedR=Object.entries(reasonCounts).sort((a,b)=>b[1]-a[1]);const mxr=Math.max(...sortedR.map(x=>x[1]),1);eldr.innerHTML=`<div style="font-size:11px;color:var(--text3);margin-bottom:8px">Total REJECT: <strong style="color:var(--red)">${totalReject}</strong></div>`+(sortedR.length?sortedR.map(([r,v])=>`<div class="bar-row"><div class="bar-label" style="font-size:9px;width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r}">${r}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/mxr*100)}%;background:var(--red)">${v||''}</div></div><div class="bar-count">${v}</div></div>`).join(''):`<div style="color:var(--text3);font-size:11px">Sin datos aún</div>`);}
+  const weeks=[];
+  for(let w=7;w>=0;w--){
+    const d=new Date();d.setDate(d.getDate()-w*7);
+    const e=new Date(d);e.setDate(e.getDate()+6);
+    const s0=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+    const e0=e.getFullYear()+'-'+pad(e.getMonth()+1)+'-'+pad(e.getDate());
+    const tv=leads.reduce((a,l)=>a+(l.hist||[]).filter(h=>h.ts&&h.ts.slice(0,10)>=s0&&h.ts.slice(0,10)<=e0).length,0);
+    weeks.push({lbl:fmt(s0),tv,tot:tv});
+  }
+  const mw=Math.max(...weeks.map(w=>w.tot),1);
+  // Inbound / Outbound breakdown
+  const inbLeads=leads.filter(l=>l.evento==='Inbound');
+  const outbLeads=leads.filter(l=>l.evento==='Outbound'||l.campana?.toLowerCase().includes('360')||l.campana?.toLowerCase().includes('diagnóstico'));
+  const inbDiv=document.getElementById('dash-inbound');
+  const outbDiv=document.getElementById('dash-outbound');
+  if(inbDiv){
+    const inbReun=inbLeads.filter(l=>l.reunion).length;
+    const inbDiag=inbLeads.filter(l=>l.diag).length;
+    const inbAb=inbLeads.filter(l=>l.status==='ABIERTO').length;
+    inbDiv.innerHTML=`<div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
+      <div style="display:flex;justify-content:space-between"><span>Total leads</span><strong>${inbLeads.length}</strong></div>
+      <div style="display:flex;justify-content:space-between"><span>Activos</span><strong style="color:var(--green)">${inbAb}</strong></div>
+      <div style="display:flex;justify-content:space-between"><span>Con exploración</span><strong style="color:var(--blue)">${inbReun}</strong></div>
+      <div style="display:flex;justify-content:space-between"><span>Con diagnóstico</span><strong style="color:var(--purple)">${inbDiag}</strong></div>
+      <div style="display:flex;justify-content:space-between"><span>Tasa exploración</span><strong>${inbLeads.length?Math.round(inbReun/inbLeads.length*100):0}%</strong></div>
+    </div>`;
+  }
+  if(outbDiv){
+    const outbReun=outbLeads.filter(l=>l.reunion).length;
+    const outbDiag=outbLeads.filter(l=>l.diag).length;
+    const outbAb=outbLeads.filter(l=>l.status==='ABIERTO').length;
+    const outbC4c=outbLeads.filter(l=>l.c4c).length;
+    const avgCalls=outbLeads.length?Math.round(outbLeads.reduce((a,l)=>a+(l.hist||[]).filter(h=>h.tipo?.includes('Llamada')||h.tipo?.includes('WhatsApp')).length,0)/outbLeads.length*10)/10:0;
+    outbDiv.innerHTML=`<div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
+      <div style="display:flex;justify-content:space-between"><span>Total leads</span><strong>${outbLeads.length}</strong></div>
+      <div style="display:flex;justify-content:space-between"><span>Activos</span><strong style="color:var(--green)">${outbAb}</strong></div>
+      <div style="display:flex;justify-content:space-between"><span>Tasa exploración</span><strong>${outbLeads.length?Math.round(outbReun/outbLeads.length*100):0}%</strong></div>
+      <div style="display:flex;justify-content:space-between"><span>Tasa diagnóstico</span><strong style="color:var(--purple)">${outbLeads.length?Math.round(outbDiag/outbLeads.length*100):0}%</strong></div>
+      <div style="display:flex;justify-content:space-between"><span>Prom. llamadas/lead</span><strong>${avgCalls}</strong></div>
+      <div style="display:flex;justify-content:space-between"><span>Cargados en C4C</span><strong style="color:var(--blue)">${outbC4c}</strong></div>
+    </div>`;
+  }
+  document.getElementById('dweek').innerHTML=weeks.map(w=>`
+    <div class="week-col">
+      <div class="week-val">${w.tot}</div>
+      <div class="week-bar-wrap">
+        <div class="week-bar" style="height:${Math.round(w.tv/mw*100)}px;background:var(--tif)" title="Interacciones:${w.tv}"></div>
+      </div>
+      <div class="week-lbl">${w.lbl}</div>
+    </div>`).join('');
+  // Sector distribution
+
+  // Embudo de Prospección (tipo reporte Excel)
+  const dEmbudo=document.getElementById('dembudo');
+  if(dEmbudo){
+    const conTel=leads.filter(l=>l.tel&&l.tel.trim()).length;
+    const trabajados=leads.filter(l=>(l.hist||[]).some(h=>h.tipo==='Llamada/WhatsApp')).length;
+    const totalLlam=leads.reduce((a,l)=>a+(l.hist||[]).filter(h=>h.tipo==='Llamada/WhatsApp').length,0);
+    const contesto=leads.filter(l=>(l.hist||[]).some(h=>h.tipo==='Llamada/WhatsApp'&&(h.nota||'').toLowerCase().includes('contest'))).length;
+    const linkedinAcep=leads.filter(l=>(l.hist||[]).some(h=>h.tipo==='LinkedIn')).length;
+    const rows=[
+      {label:'Leads en cartera (universo)',val:total,pct:'100%',color:''},
+      {label:'Leads con teléfono válido',val:conTel,pct:total>0?Math.round(conTel/total*100)+'%':'—',color:''},
+      {label:'Leads trabajados (≥1 llamada)',val:trabajados,pct:total>0?Math.round(trabajados/total*100)+'%':'—',color:'var(--orange)'},
+      {label:'Llamadas totales realizadas',val:totalLlam,pct:'—',color:''},
+      {label:'Leads contactados (≥1 llamada registrada)',val:conCallHist,pct:trabajados>0?Math.round(conCallHist/trabajados*100)+'%':'—',color:'var(--green)'},
+      {label:'Con exploración agendada',val:conExpl,pct:total>0?Math.round(conExpl/total*100)+'%':'—',color:'var(--blue)'},
+      {label:'Con diagnóstico 360°',val:conDiag,pct:total>0?Math.round(conDiag/total*100)+'%':'—',color:'var(--purple)'},
+      {label:'Contactos por LinkedIn (historial)',val:linkedinAcep,pct:trabajados>0?Math.round(linkedinAcep/trabajados*100)+'%':'—',color:'#0a66c2'},
+      {label:'Correos enviados (historial)',val:leads.reduce((a,l)=>a+(l.hist||[]).filter(h=>h.tipo==='Correo Enviado').length,0),pct:'—',color:''},
+    ];
+    dEmbudo.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="background:var(--sidebar);color:#fff">
+        <th style="padding:8px 12px;text-align:left;font-size:10px;letter-spacing:.05em">ETAPA</th>
+        <th style="padding:8px 12px;text-align:center;font-size:10px;letter-spacing:.05em">CANTIDAD</th>
+        <th style="padding:8px 12px;text-align:center;font-size:10px;letter-spacing:.05em">% CARTERA</th>
+      </tr></thead>
+      <tbody>${rows.map((r,i)=>`<tr style="border-bottom:1px solid var(--border);background:${i%2?'var(--s2)':'var(--surface)'}">
+        <td style="padding:8px 12px;font-weight:500">${r.label}</td>
+        <td style="padding:8px 12px;text-align:center;font-weight:700;font-size:14px;color:${r.color||'var(--text)'}">${r.val}</td>
+        <td style="padding:8px 12px;text-align:center;font-weight:600;color:${r.color||'var(--text2)'}">${r.pct}</td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+  }
+
+  const dSector=document.getElementById('dsector');
+  if(dSector){
+    const sCount={};
+    leads.forEach(l=>{if(l.sector){const s=l.sector.trim();sCount[s]=(sCount[s]||0)+1;}});
+    const sorted=Object.entries(sCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    const mxs=Math.max(...sorted.map(x=>x[1]),1);
+    dSector.innerHTML=sorted.length?sorted.map(([s,v])=>`<div class="bar-row"><div class="bar-label" style="font-size:10px">${s}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/mxs*100)}%;background:var(--purple)">${v||''}</div></div><div class="bar-count">${v}</div></div>`).join(''):'<div style="color:var(--text3);font-size:11px">Sin datos</div>';
+  }
+}
+
+function setTab(t){
+  tab=t;
+  ['tabla','kanban','historial','tareas','dashboard','campanas','eventos'].forEach(x=>{
+    document.getElementById('view-'+x).style.display=x===t?'':'none';
+    document.getElementById('t-'+x).classList.toggle('active',x===t);
+  });
+  document.getElementById('toolbar-main').style.display=(t==='tabla'||t==='kanban')?'':'none';
+  const titles={'tabla':'Leads','kanban':'Pipeline','historial':'Historial','tareas':'Tareas','dashboard':'Dashboard','campanas':'Campañas','eventos':'Eventos Corporativos'};
+  const pt=document.getElementById('page-title');if(pt)pt.textContent=titles[t]||'CRM';
+  if(t==='tabla')renderTabla();else if(t==='kanban')renderKanban();else if(t==='historial')renderHistorial();else if(t==='tareas')renderTareas();else if(t==='dashboard')renderDashboard();else if(t==='campanas')renderCampanas();else if(t==='eventos')renderEventos();
+}
+
+/* ══════════════════════════════════════════════════════
+   MODAL LEAD — lógica view / edit / new
+══════════════════════════════════════════════════════ */
+
+function openView(id){
+  editId=id;_etmp=[];_modalMode='view';
+  const l=leads.find(x=>String(x.id)===String(id));if(!l)return;
+  _ec=l.calls.slice();_ecanal=(l.canal||[]).slice();
+  buildModalView(l);
+  document.getElementById('mo').classList.add('open');
+}
+
+function openEdit(id){
+
+  editId=id;_etmp=[];_modalMode='edit';
+  const l=leads.find(x=>String(x.id)===String(id));if(!l)return;
+  _ec=l.calls.slice();_ecanal=(l.canal||[]).slice();
+  buildModalEdit(l);
+  document.getElementById('mo').classList.add('open');
+  initTelList(l.tel||'');
+}
+
+function openNew(){
+  editId=null;_etmp=[];_modalMode='new';
+  _ec=new Array(12).fill(0);_ecanal=[];
+  const blank={id:null,razon:'',contacto:'',apellido:'',cargo:'',tel:'',email:'',sector:'',evento:'',kam:'',linkedin:'',canal:[],calls:_ec.slice(),reunion:false,reunion_date:'',diag:false,diag_date:'',status:'ABIERTO',sem:'r',etapa:'Contacto Inicial',next:'',encargado:'',bant:{b:'',a:'',n:'',t:''},hist:[],empresa:{ruc:'',condicion:[],facturacion:'',contactos:[]}};
+  buildModalEdit(blank);
+  document.getElementById('mo').classList.add('open');
+}
+
+function closeMo(){document.getElementById('mo').classList.remove('open');}
+
+/* ── Vista de sólo lectura ── */
+function buildModalView(l){
+  const bant=l.bant||{b:'',a:'',n:'',t:''};
+  document.getElementById('mtitle').textContent=l.razon||'Lead';
+  document.getElementById('mled').style.background=semHex(l.sem||'r');
+  document.getElementById('mbadge').textContent='Vista';
+  document.getElementById('mbadge').className='mo-mode-badge view';
+
+  const lwDone=LW_IDX.filter(i=>l.calls[i]).length;
+  const emDone=EM_IDX.filter(i=>l.calls[i]).length;
+
+  const histHtml=(l.hist||[]).slice().reverse().map((h,ri)=>{
+    const oi=(l.hist||[]).length-1-ri;
+    return`<div class="mo-hi ${tCls(h.tipo)}">
+      <div class="mo-hi-content">
+        <div class="mo-hi-meta">📅 ${cleanTs(h.ts)}${h.exec_date?` · <span class="mo-hi-exec">Ejecución: ${fmt(h.exec_date)}</span>`:''}</div>
+        <div style="font-size:11px;font-weight:600;color:var(--text2)">${h.tipo}</div>
+        <div style="font-size:12px;color:var(--text)">${h.nota}</div>
+      </div>
+    </div>`;
+  }).join('')||'<span style="font-size:11px;color:var(--text3)">Sin interacciones aún.</span>';
+
+  document.getElementById('mbody').innerHTML=`
+    <!-- Semáforo visual -->
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--s2);border-radius:var(--r);border:1px solid var(--border)">
+      <span style="width:12px;height:12px;border-radius:50%;background:${semHex(l.sem)};flex-shrink:0;display:inline-block"></span>
+      <span style="font-size:12px;font-weight:600">${cL(l.sem)}</span>
+      <span class="chip ${cC(l.sem)}" style="margin-left:4px">${l.status}</span>
+    </div>
+
+    <div class="sec">Identificación</div>
+    <div class="fr">
+      <div class="field"><label>Razón Social</label><div class="fv">${l.razon||'—'}</div></div>
+      <div class="field"><label>Sector / Industria</label><div class="fv ${!l.sector?'em':''}">${l.sector||'Sin especificar'}</div></div>
+    </div>
+    <div class="fr fr3">
+      <div class="field"><label>Evento</label><div class="fv ${!l.evento?'em':''}">${l.evento||'—'}</div></div>
+      <div class="field"><label>KAM / Comercial</label><div class="fv ${!l.kam?'em':''}">${l.kam||'—'}</div></div>
+      <div class="field"><label>LinkedIn</label><div class="fv ${!l.linkedin?'em':''}">${l.linkedin?`<a href="${l.linkedin}" target="_blank" style="color:var(--blue)">${l.linkedin}</a>`:'—'}</div></div>
+    </div>
+
+    <div class="sec">Contacto Principal</div>
+    <div class="fr fr3">
+      <div class="field"><label>Nombre</label><div class="fv">${l.contacto||'—'}</div></div>
+      <div class="field"><label>Apellido</label><div class="fv">${l.apellido||'—'}</div></div>
+      <div class="field"><label>Cargo</label><div class="fv ${!l.cargo?'em':''}">${l.cargo||'—'}</div></div>
+    </div>
+    <div class="fr">
+      <div class="field"><label>Teléfono</label><div class="fv">${l.tel||'—'}</div></div>
+      <div class="field"><label>Correo</label><div class="fv">${l.email?`<a href="mailto:${l.email}" style="color:var(--blue)">${l.email}</a>`:'—'}</div></div>
+    </div>
+
+    <div class="sec">Pipeline</div>
+    <div class="fr">
+      <div class="field"><label>Etapa</label>
+        <div style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px;background:${ECOLORS[l.etapa]||'#ccc'}22;border-radius:var(--r);border:1px solid ${ECOLORS[l.etapa]||'#ccc'}44">
+          <span style="width:8px;height:8px;border-radius:50%;background:${ECOLORS[l.etapa]||'#ccc'};flex-shrink:0"></span>
+          <span style="font-size:12px;font-weight:600;color:${ECOLORS[l.etapa]||'var(--text2)'}">${l.etapa}</span>
+        </div>
+      </div>
+      <div class="field"><label>Próxima Acción</label><div class="fv ${!l.next?'em':''}">${l.next?fmt(l.next):'Sin fecha'}</div></div>
+    </div>
+    <div class="fr">
+      <div class="field"><label>Exploración</label>
+        <div class="fv">${l.reunion?`✅ Sí &nbsp;<span style="font-size:10px;color:var(--text3)">${fmt(l.reunion_date)}</span>`:'⬜ Pendiente'}</div>
+      </div>
+      <div class="field"><label>Diagnóstico 360°</label>
+        <div class="fv">${l.diag?`✅ Sí &nbsp;<span style="font-size:10px;color:var(--text3)">${fmt(l.diag_date)}</span>`:'⬜ Pendiente'}</div>
+      </div>
+    </div>
+
+    <div class="sec">Actividad de Contacto</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;padding:4px 0 8px">
+      <div style="display:flex;align-items:center;gap:6px;background:var(--bbg);border-radius:var(--r);padding:6px 12px">
+        <span style="font-size:16px">📞</span>
+        <div><div style="font-size:18px;font-weight:800;color:var(--blue)">${(l.hist||[]).filter(h=>h.tipo?.includes('Llamada')||h.tipo?.includes('WhatsApp')).length}</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">LLamadas/WA</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;background:var(--gbg);border-radius:var(--r);padding:6px 12px">
+        <span style="font-size:16px">✉️</span>
+        <div><div style="font-size:18px;font-weight:800;color:var(--green)">${(l.hist||[]).filter(h=>h.tipo?.includes('Correo')).length}</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Correos</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;background:#e8f4ff;border-radius:var(--r);padding:6px 12px">
+        <span style="font-size:16px">💼</span>
+        <div><div style="font-size:18px;font-weight:800;color:#0a66c2">${(l.hist||[]).filter(h=>h.tipo?.includes('LinkedIn')).length}</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">LinkedIn</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;background:var(--obg);border-radius:var(--r);padding:6px 12px">
+        <span style="font-size:16px">📋</span>
+        <div><div style="font-size:18px;font-weight:800;color:var(--orange)">${(l.hist||[]).length}</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Total interac.</div></div>
+      </div>
+    </div>
+    <div class="sec">Historial</div>
+    <div class="mo-hist">${histHtml}</div>
+
+    <!-- Agregar nota rápida incluso en modo vista -->
+    <div class="add-n">
+      <select id="nn-tipo">
+        <option>Llamada/WhatsApp</option><option>Correo Enviado</option><option>LinkedIn</option>
+        <option>Reunión</option><option>Diagnóstico</option><option>Tarea</option><option>Nota</option>
+      </select>
+      <span id="nn-fecha-wrap"><input type="date" id="nn-fecha" placeholder="Fecha ejecución"></span>
+      <textarea id="nn-nota" placeholder="Nueva interacción..."></textarea>
+      <button class="btn btn-blue" onclick="addMoNota()">+ Agregar</button>
+    </div>`;
+
+  // Footer: botón Editar
+  document.getElementById('mftr').innerHTML=`
+    <button class="btn" onclick="closeMo()">Cerrar</button>
+    <button class="btn btn-blue" onclick="switchToEdit()">
+      ✏️ Editar Lead
+    </button>`;
+}
+
+function switchToEdit(){
+  const l=leads.find(x=>String(x.id)===String(editId));if(!l)return;
+  _modalMode='edit';
+  _ec=l.calls.slice();_ecanal=(l.canal||[]).slice();
+  buildModalEdit(l);
+}
+
+/* ── Vista de edición ── */
+function buildModalEdit(l){
+  const bant=l.bant||{b:'',a:'',n:'',t:''};
+  document.getElementById('mtitle').textContent=l.razon||'Nuevo Lead';
+  document.getElementById('mled').style.background=semHex(l.sem||'r');
+  document.getElementById('mbadge').textContent=editId?'Editando':'Nuevo';
+  document.getElementById('mbadge').className='mo-mode-badge edit';
+
+  const lwDone=LW_IDX.filter(i=>_ec[i]).length;
+  const emDone=EM_IDX.filter(i=>_ec[i]).length;
+
+  const histHtml=(l.hist||[]).slice().reverse().map((h,ri)=>{
+    const oi=(l.hist||[]).length-1-ri;
+    return`<div class="mo-hi ${tCls(h.tipo)}">
+      <div class="mo-hi-content">
+        <div class="mo-hi-meta">📅 ${cleanTs(h.ts)}${h.exec_date?` · <span class="mo-hi-exec">Ejecución: ${fmt(h.exec_date)}</span>`:''} <button class="mo-hi-del" onclick="delMoHist(${oi})" title="Eliminar nota">🗑</button></div>
+        <div style="font-size:11px;font-weight:600;color:var(--text2)">${h.tipo}</div>
+        <div style="font-size:12px;color:var(--text)">${h.nota}</div>
+      </div>
+    </div>`;
+  }).join('')||'<span style="font-size:11px;color:var(--text3)">Sin interacciones aún.</span>';
+
+  document.getElementById('mbody').innerHTML=`
+    <div class="sec">Identificación</div>
+    <div class="fr">
+      <div class="field"><label>Razón Social *</label><input id="f-razon" value="${l.razon||''}" placeholder="NOMBRE EMPRESA" oninput="this.value=this.value.toUpperCase()"></div>
+
+    </div>
+    <div class="fr">
+      <div class="field"><label>Sector / Industria</label><input id="f-sector" value="${l.sector||''}" placeholder="Manufactura, Distribución..."></div>
+    </div>
+    <div class="fr">
+      <div class="field"><label>Status</label>
+        <select id="f-status">${STATUS_OPTIONS.map(s=>`<option value="${s}" ${(l.status||'ABIERTO')===s?'selected':''}>${s}</option>`).join('')}</select>
+      </div>
+    </div>
+
+    <div class="sec">Datos Adicionales</div>
+    <div class="fr fr3">
+      <div class="field"><label>Evento</label>
+        <select id="f-evento" onchange="onEventoChange(this.value,'${l.campana||''}')">
+          <option value="">Selecciona...</option>
+          ${EVENTOS.map(e=>`<option value="${e}" ${(l.evento===e||(!l.campana&&l.evento===e)||(e==='Campaña'&&l.campana&&l.evento==='Campaña'))?'selected':''}>${e==='Inbound'?'Inbound (Entrada)':e==='Outbound'?'Outbound (Prospección)':e}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field" id="f-campana-wrap" style="${(l.evento==='Campaña'||l.campana)?'':'display:none'}"><label>Campaña</label>
+        <select id="f-campana">
+          <option value="">Selecciona campaña...</option>
+          ${campanas.map(c=>`<option value="${c.nombre}" ${(l.campana===c.nombre)?'selected':''}>${c.nombre}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>KAM / Comercial</label>
+        <select id="f-kam">
+          <option value="">Selecciona...</option>
+          ${KAMS.map(k=>`<option value="${k}" ${l.kam===k?'selected':''}>${k}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>LinkedIn</label>
+        <input id="f-linkedin" type="url" value="${l.linkedin||''}" placeholder="linkedin.com/in/...">
+      </div>
+    </div>
+
+    <div class="sec">Contacto Principal</div>
+    <div class="fr fr3">
+      <div class="field"><label>Nombre(s)</label><input id="f-nom" value="${l.contacto||''}" placeholder="Nombre"></div>
+      <div class="field"><label>Apellido(s)</label><input id="f-ape" value="${l.apellido||''}" placeholder="Apellido"></div>
+      <div class="field"><label>Cargo</label><input id="f-cargo" value="${l.cargo||''}" placeholder="CEO, Gerente..."></div>
+    </div>
+    <div class="fr">
+      <div class="field"><label>Teléfono</label>
+        <div class="tel-list" id="f-tel-list"></div>
+        <button type="button" class="tel-add" onclick="addTelRow()">+ Agregar número</button>
+      </div>
+      <div class="field"><label>Correo</label><input id="f-email" value="${l.email||''}" placeholder="correo@empresa.pe"></div>
+    </div>
+
+    <div class="sec">Pipeline</div>
+    <div class="fr">
+      <div class="field"><label>Etapa</label>
+        <select id="f-etapa">${ETAPAS.map(e=>`<option value="${e}" ${(l.etapa||'Contacto Inicial')===e?'selected':''}>${e}</option>`).join('')}</select>
+      </div>
+      
+      <div class="field" style="flex-direction:row;align-items:center;gap:10px;padding:10px 0">
+        <input type="checkbox" id="f-c4c" style="width:16px;height:16px;accent-color:var(--blue);cursor:pointer">
+        <label for="f-c4c" style="cursor:pointer;font-weight:600;font-size:12px;color:var(--text)">Cargado en C4C (CRM Corporativo)</label>
+      </div>
+      <div class="field"><label>Próxima Acción</label><input id="f-next" type="date" value="${l.next||''}"></div>
+    </div>
+    <div class="fr">
+      <div class="field"><label>Exploración</label>
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0">
+          <input type="checkbox" id="f-reunion" ${l.reunion?'checked':''} onchange="toggleCita('reunion',this.checked)" style="width:16px;height:16px;cursor:pointer">
+          <label for="f-reunion" style="font-size:12px;cursor:pointer">Realizada</label>
+          <input type="date" id="f-reunion-date" value="${l.reunion_date||''}" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:11px;${!l.reunion?'opacity:.4;pointer-events:none':''}">
+        </div>
+      </div>
+      <div class="field"><label>Diagnóstico 360°</label>
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0">
+          <input type="checkbox" id="f-diag" ${l.diag?'checked':''} onchange="toggleCita('diag',this.checked)" style="width:16px;height:16px;cursor:pointer">
+          <label for="f-diag" style="font-size:12px;cursor:pointer">Realizado</label>
+          <input type="date" id="f-diag-date" value="${l.diag_date||''}" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:11px;${!l.diag?'opacity:.4;pointer-events:none':''}">
+        </div>
+      </div>
+    </div>
+
+    <!-- CÍRCULOS — solo en modal, 6 LW + 6 E -->
+    <div class="sec">Actividad de Contacto</div>
+    <div style="font-size:11px;color:var(--text3);padding:4px 0 8px;font-style:italic">Los contactos se registran automáticamente en el historial al agregar entradas.</div>
+    <div class="sec">Historial</div>
+    <div class="mo-hist" id="mo-hist">${histHtml}</div>
+    <div class="add-n">
+      <select id="nn-tipo">
+        <option>Llamada/WhatsApp</option><option>Correo Enviado</option><option>LinkedIn</option>
+        <option>Reunión</option><option>Diagnóstico</option><option>Tarea</option><option>Nota</option>
+      </select>
+      <span id="nn-fecha-wrap"><input type="date" id="nn-fecha" placeholder="Fecha ejecución"></span>
+      <textarea id="nn-nota" placeholder="Nueva interacción..."></textarea>
+      <button class="btn btn-blue" onclick="addMoNota()">+ Agregar</button>
+    </div>
+
+    ${!editId?`
+    <div class="sec">Datos de Empresa (opcional)</div>
+    <div class="fr">
+      <div class="field"><label>RUC</label><input id="f-ruc-new" placeholder="20xxxxxxxxx"></div>
+      <div class="field"><label>Facturación Anual</label><input id="f-fact-new" placeholder="S/ 1,000,000.00"></div>
+    </div>`:''}
+    <div class="sec">BANT — Calificación</div>
+    <div class="bant-g">
+      <div class="bant-box"><div class="bant-lbl">B — Presupuesto</div><textarea class="bant-ta" id="f-b">${bant.b||''}</textarea></div>
+      <div class="bant-box"><div class="bant-lbl">A — Autoridad</div><textarea class="bant-ta" id="f-a">${bant.a||''}</textarea></div>
+      <div class="bant-box"><div class="bant-lbl">N — Necesidad</div><textarea class="bant-ta" id="f-n">${bant.n||''}</textarea></div>
+      <div class="bant-box"><div class="bant-lbl">T — Timeline</div><textarea class="bant-ta" id="f-t">${bant.t||''}</textarea></div>
+    </div>`;
+
+  // Footer: guardar / cancelar
+  document.getElementById('mftr').innerHTML=`
+    <span class="sav-ind" id="sind" style="display:none">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+      Guardando en Sheets...
+    </span>
+    ${editId?`<button class="btn" onclick="switchToView()">Cancelar</button>`:`<button class="btn" onclick="closeMo()">Cancelar</button>`}
+    <button class="btn btn-blue" id="sbtn" onclick="saveMo()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+      Guardar
+    </button>`;
+}
+
+function switchToView(){
+  const l=leads.find(x=>String(x.id)===String(editId));if(!l)return;
+  _modalMode='view';buildModalView(l);
+}
+
+/* Semáforo en edición */
+let _editSem='r';
+function setSem(s){
+  _editSem=s;
+  document.querySelectorAll('.sem-opt').forEach(el=>el.classList.remove('active'));
+  const cls={g:'sg',o:'so',r:'sr'}[s];
+  document.querySelectorAll('.sem-opt.'+cls).forEach(el=>el.classList.add('active'));
+  document.getElementById('mled').style.background=semHex(s);
+}
+
+/* Checkbox exploración / diagnóstico en edición → auto-historial al guardar */
+function toggleCita(tipo,checked){
+  const dateInput=document.getElementById('f-'+tipo+'-date');
+  if(dateInput){dateInput.style.opacity=checked?'1':'.4';dateInput.style.pointerEvents=checked?'auto':'none';}
+}
+
+/* Círculos en modal edición → auto-historial al marcar */
+function tcm(idx,tipo){
+  _ec[idx]=_ec[idx]?0:1;
+  const el=document.getElementById('mc-'+idx);
+  if(el)el.className='cdot '+(_ec[idx]?(tipo==='lw'?'on-lw':'on-em'):'off');
+  // Actualizar contadores
+  const lwDone=LW_IDX.filter(i=>_ec[i]).length;
+  const emDone=EM_IDX.filter(i=>_ec[i]).length;
+  const lwCnt=document.getElementById('lw-cnt');if(lwCnt)lwCnt.textContent=lwDone+'/6';
+  const emCnt=document.getElementById('em-cnt');if(emCnt)emCnt.textContent=emDone+'/6';
+  // Auto-historial si se marca (no desmarca)
+  if(_ec[idx]){
+    const ts=nowTs();
+    const tipoLabel=tipo==='lw'?'Llamada/WhatsApp':'Correo Enviado';
+    const num=tipo==='lw'?LW_IDX.indexOf(idx)+1:EM_IDX.indexOf(idx)+1;
+    const nota=`${tipoLabel} ${num} marcada`;
+    _etmp.push({ts,tipo:tipoLabel,nota,exec_date:today()});
+    // Mostrar en historial del modal
+    const h=document.getElementById('mo-hist');
+    if(h){
+      const sp=h.querySelector('span');if(sp)sp.remove();
+      const div=document.createElement('div');
+      div.className=`mo-hi ${tipo==='lw'?'tl':'tw'}`;
+      div.innerHTML=`<div class="mo-hi-content"><div class="mo-hi-meta">📅 ${ts} · <span class="mo-hi-exec">Ejecución: ${fmt(today())}</span></div><div style="font-size:11px;font-weight:600;color:var(--text2)">${tipoLabel}</div><div style="font-size:12px;color:var(--text)">${nota}</div></div>`;
+      h.prepend(div);
+    }
+  }
+}
+
+/* Nota manual en modal */
+function addMoNota(){
+  const nota=document.getElementById('nn-nota').value.trim();if(!nota)return;
+  const tipo=document.getElementById('nn-tipo').value;
+  const fechaEl=document.getElementById('nn-fecha');
+  const fecha=fechaEl?fechaEl.value:'';
+  const entry={ts:nowTs(),tipo,nota,exec_date:fecha};
+  _etmp.push(entry);
+  document.getElementById('nn-nota').value='';
+  if(fechaEl)fechaEl.value='';
+  document.getElementById('nn-fecha-wrap').style.display='none';
+  document.getElementById('nn-tipo').value='Llamada/WhatsApp';
+  const h=document.getElementById('mo-hist');
+  if(h){
+    const sp=h.querySelector('span');if(sp)sp.remove();
+    const div=document.createElement('div');
+    div.className=`mo-hi ${tCls(tipo)}`;
+    div.innerHTML=`<div class="mo-hi-content"><div class="mo-hi-meta">📅 ${entry.ts}${fecha?` · <span class="mo-hi-exec">Ejecución: ${fmt(fecha)}</span>`:''}</div><div style="font-size:11px;font-weight:600;color:var(--text2)">${tipo}</div><div style="font-size:12px;color:var(--text)">${nota}</div></div>`;
+    h.prepend(div);
+  }
+}
+
+async function delMoHist(idx){
+  const ok=await moConfirm('¿Eliminar nota?','Esta acción no se puede deshacer.');
+  if(!ok)return;
+  const l=editId?leads.find(x=>String(x.id)===String(editId)):null;
+  if(l&&l.hist)l.hist.splice(idx,1);
+  if(_modalMode==='edit'&&l)buildModalEdit(l);
+  else if(_modalMode==='view'&&l)buildModalView(l);
+}
+
+/* GUARDAR desde modal */
+async function saveMo(overrideRejectReason){
+  const razon=document.getElementById('f-razon')?.value?.trim()?.toUpperCase();
+  if(!razon){toast('La Razón Social es obligatoria','err');return;}
+  // REJECT check
+  const _statusNow=document.getElementById('f-status')?.value;
+  const _exNow=editId?leads.find(x=>String(x.id)===String(editId)):null;
+  if(_statusNow==='REJECT'&&(!_exNow||_exNow.status!=='REJECT')&&!overrideRejectReason){
+    showRejectModal({},async(lr)=>{await saveMo(lr.reject_reason);});
+    return;
+  }
+
+  const sind=document.getElementById('sind');const sbtn=document.getElementById('sbtn');
+  if(sind)sind.style.display='flex';if(sbtn)sbtn.disabled=true;
+
+  const ex=editId?leads.find(x=>String(x.id)===String(editId)):null;
+
+  // Detectar si exploración/diagnóstico cambiaron
+  const reunionChecked=document.getElementById('f-reunion')?.checked??false;
+  const reunionDate=document.getElementById('f-reunion-date')?.value||'';
+  const diagChecked=document.getElementById('f-diag')?.checked??false;
+  const diagDate=document.getElementById('f-diag-date')?.value||'';
+
+  // Auto-historial si exploración se activó
+  if(reunionChecked&&!(ex&&ex.reunion)){
+    _etmp.push({ts:nowTs(),tipo:'Reunión',nota:`Exploración marcada${reunionDate?' para '+fmt(reunionDate):''}`,exec_date:reunionDate});
+  }
+  if(diagChecked&&!(ex&&ex.diag)){
+    _etmp.push({ts:nowTs(),tipo:'Diagnóstico',nota:`Diagnóstico 360° marcado${diagDate?' para '+fmt(diagDate):''}`,exec_date:diagDate});
+  }
+
+  // Semáforo derivado automáticamente del Status
+  const statusVal=document.getElementById('f-status').value;
+  const sem=statusVal==='ABIERTO'?'g':statusVal==='HOLD'?'o':'r';
+
+  const lead={
+    id          : editId||Date.now().toString(),
+    razon,
+    nombre_lead : razon,
+    sector      : document.getElementById('f-sector').value.trim(),
+    evento    : document.getElementById('f-evento').value.trim(),
+    kam       : document.getElementById('f-kam').value.trim(),
+    linkedin  : document.getElementById('f-linkedin').value.trim(),
+    sem,
+    encargado : document.getElementById('f-enc').value,
+    contacto  : document.getElementById('f-nom').value.trim(),
+    apellido  : document.getElementById('f-ape').value.trim(),
+    cargo     : document.getElementById('f-cargo').value.trim(),
+    tel       : getTelValue(),
+    email     : document.getElementById('f-email').value.trim(),
+    canal     : _ecanal.slice(),
+    etapa     : document.getElementById('f-etapa').value,
+    next      : document.getElementById('f-next').value,
+    status    : document.getElementById('f-status').value,
+    calls     : _ec.slice(),
+    reunion   : reunionChecked,
+    reunion_date: reunionDate,
+    diag      : diagChecked,
+    diag_date : diagDate,
+    bant:{
+      b:document.getElementById('f-b').value,
+      a:document.getElementById('f-a').value,
+      n:document.getElementById('f-n').value,
+      t:document.getElementById('f-t').value
+    },
+    c4c         : !!(document.getElementById('f-c4c')?.checked),
+    reject_reason: overrideRejectReason||(ex?ex.reject_reason||'':''),
+    campana     : (()=>{const ev=document.getElementById('f-evento').value;const cp=document.getElementById('f-campana')?.value||'';return ev==='Campaña'?cp:(ev&&!['Inbound','Outbound','SAP'].includes(ev)?ev:'');})(),
+    hist:[...(ex?ex.hist||[]:[]),..._etmp],
+    empresa: ex?(ex.empresa||{ruc:'',condicion:[],facturacion:'',contactos:[]}):
+               {ruc:(document.getElementById('f-ruc-new')||{value:''}).value.trim(),
+                condicion:[],
+                facturacion:(document.getElementById('f-fact-new')||{value:''}).value.trim(),
+                contactos:[]},
+  };
+
+  await saveLead(lead);
+  _etmp=[];
+  editId=lead.id;
+  if(sind)sind.style.display='none';if(sbtn)sbtn.disabled=false;
+
+  // Volver a vista después de guardar
+  _modalMode='view';
+  const saved=leads.find(x=>String(x.id)===String(lead.id));
+  if(saved)buildModalView(saved);
+  else closeMo();
+}
+
+/* ── Modal Empresa (datos fiscales + multicontacto) ── */
+function openEmp(id){
+  empId=id;
+  const l=leads.find(x=>String(x.id)===String(id));if(!l)return;
+  const emp=l.empresa||{ruc:'',condicion:[],facturacion:'',contactos:[]};
+  const condArr=Array.isArray(emp.condicion)?emp.condicion:[];
+  _econt=(emp.contactos||[]).map(c=>({...c}));
+  document.getElementById('etitle').textContent=(l.nombre_lead?l.nombre_lead+' — ':'')+( l.razon||'Empresa');
+  document.getElementById('eled').style.background=semHex(l.sem||'r');
+  document.getElementById('ebody').innerHTML=`
+    <div class="sec">Datos Fiscales</div>
+    <div class="fr">
+      <div class="field"><label>RUC</label><input id="eruc" value="${emp.ruc||''}" placeholder="20xxxxxxxxx"></div>
+      <div class="field"><label>Facturación Anual</label><input id="efact" value="${emp.facturacion||''}" placeholder="S/ 1,000,000.00"
+        oninput="this.value=this.value.replace(/[^0-9.,]/g,'')"
+        onblur="if(this.value){const n=parseFloat(this.value.replace(/,/g,''));if(!isNaN(n))this.value='S/ '+n.toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2});}"></div>
+    </div>
+    <div class="field">
+      <label>Condición Tributaria <span style="font-weight:400;color:var(--text3)">(puede seleccionar varias)</span></label>
+      <div class="cond-tags" id="cond-tags">
+        ${COND_OPTS.map(o=>`<span class="cond-tag${condArr.includes(o)?' on':''}" onclick="toggleCond(this)">${o}</span>`).join('')}
+      </div>
+    </div>
+    <div class="sec">Multicontacto</div>
+    <div class="emp-contacts" id="econt">
+      ${_econt.map((c,i)=>empContactRow(c,i)).join('')}
+    </div>
+    <button class="emp-add-btn" onclick="addEmpContact()">＋ Agregar contacto</button>`;
+  document.getElementById('mo-emp').classList.add('open');
+}
+function empContactRow(c,i){
+  return`<div class="emp-contact-row" id="erow-${i}">
+    <input placeholder="Nombre" value="${c.nombre||''}" oninput="_econt[${i}].nombre=this.value">
+    <input placeholder="Cargo" value="${c.cargo||''}" oninput="_econt[${i}].cargo=this.value" style="max-width:130px">
+    <input placeholder="Teléfono" value="${c.tel||''}" oninput="_econt[${i}].tel=this.value" style="max-width:115px">
+    <input placeholder="Correo" value="${c.email||''}" oninput="_econt[${i}].email=this.value">
+    <button class="del-btn" style="padding:3px 8px;flex-shrink:0" onclick="removeEmpContact(${i})" title="Quitar">×</button>
+  </div>`;
+}
+function toggleCond(el){el.classList.toggle('on');}
+function addEmpContact(){
+  const i=_econt.length;_econt.push({nombre:'',cargo:'',tel:'',email:''});
+  const cont=document.getElementById('econt');
+  const div=document.createElement('div');div.className='emp-contact-row';div.id='erow-'+i;
+  div.innerHTML=`<input placeholder="Nombre" oninput="_econt[${i}].nombre=this.value"><input placeholder="Cargo" oninput="_econt[${i}].cargo=this.value" style="max-width:130px"><input placeholder="Teléfono" oninput="_econt[${i}].tel=this.value" style="max-width:115px"><input placeholder="Correo" oninput="_econt[${i}].email=this.value"><button class="del-btn" style="padding:3px 8px;flex-shrink:0" onclick="removeEmpContact(${i})" title="Quitar">×</button>`;
+  cont.appendChild(div);div.querySelector('input').focus();
+}
+function removeEmpContact(i){_econt.splice(i,1);openEmp(empId);}
+async function saveEmp(){
+  const l=leads.find(x=>String(x.id)===String(empId));if(!l)return;
+  if(!l.empresa)l.empresa={};
+  l.empresa.ruc=document.getElementById('eruc').value.trim();
+  l.empresa.facturacion=document.getElementById('efact').value.trim();
+  l.empresa.condicion=Array.from(document.querySelectorAll('#cond-tags .cond-tag.on')).map(el=>el.textContent.trim());
+  l.empresa.contactos=_econt.filter(c=>c.nombre||c.tel||c.email);
+  if(!l.hist)l.hist=[];
+  l.hist.push({ts:nowTs(),tipo:'Nota',nota:'Datos de empresa actualizados',exec_date:''});
+  await saveLead(l);closeEmp();
+}
+function closeEmp(){document.getElementById('mo-emp').classList.remove('open');}
+
+/* ── Exportar XLSX ── */
+const EXPORT_FIELDS=[
+  {key:'id',        label:'ID'},
+  {key:'razon',     label:'Razón Social'},
+  {key:'nombre_lead',label:'Nombre Lead'},
+  {key:'contacto',  label:'Contacto'},
+  {key:'apellido',  label:'Apellido'},
+  {key:'cargo',     label:'Cargo'},
+  {key:'tel',       label:'Teléfono'},
+  {key:'email',     label:'Email'},
+  {key:'sector',    label:'Sector'},
+  {key:'ruc',       label:'RUC'},
+  {key:'evento',    label:'Evento'},
+  {key:'kam',       label:'KAM'},
+  {key:'linkedin',  label:'LinkedIn'},
+  {key:'status',    label:'Status'},
+  {key:'lw',        label:'LW Completadas'},
+  {key:'correos',   label:'Correos Completados'},
+  {key:'reunion',   label:'Exploración'},
+  {key:'reunion_date',label:'Fecha Exploración'},
+  {key:'diag',      label:'Diagnóstico'},
+  {key:'diag_date', label:'Fecha Diagnóstico'},
+  {key:'etapa',     label:'Etapa'},
+  {key:'next',      label:'Próxima Acción'},
+  {key:'encargado', label:'Encargado'},
+  {key:'bant_b',    label:'BANT — Budget'},
+  {key:'bant_a',    label:'BANT — Authority'},
+  {key:'bant_n',    label:'BANT — Need'},
+  {key:'bant_t',    label:'BANT — Timeline'},
+  {key:'facturacion',label:'Facturación'},
+  {key:'condicion', label:'Condición Tributaria'},
+];
+
+let _expSel=new Set(EXPORT_FIELDS.map(f=>f.key));
+
+function exportLeads(){
+  if(!leads.length){toast('No hay datos para exportar','err');return;}
+  buildExportModal();
+  document.getElementById('mo-export').classList.add('open');
+}
+
+function buildExportModal(){
+  const cont=document.getElementById('exp-cols');
+  cont.innerHTML=EXPORT_FIELDS.map(f=>`
+    <div class="export-col-item ${_expSel.has(f.key)?'checked':''}" onclick="toggleExpCol('${f.key}',this)">
+      <input type="checkbox" id="exc-${f.key}" ${_expSel.has(f.key)?'checked':''} onclick="event.stopPropagation()">
+      <label for="exc-${f.key}">${f.label}</label>
+    </div>`).join('');
+  updateExpCount();
+}
+
+function toggleExpCol(key,el){
+  if(_expSel.has(key)){_expSel.delete(key);el.classList.remove('checked');el.querySelector('input').checked=false;}
+  else{_expSel.add(key);el.classList.add('checked');el.querySelector('input').checked=true;}
+  updateExpCount();
+}
+
+function exportSelAll(val){
+  _expSel=val?new Set(EXPORT_FIELDS.map(f=>f.key)):new Set();
+  buildExportModal();
+}
+
+function updateExpCount(){
+  document.getElementById('exp-count').textContent=_expSel.size+' columnas seleccionadas';
+}
+
+function closeExport(){document.getElementById('mo-export').classList.remove('open');}
+
+function getLeadVal(l,key){
+  if(key==='lw')return LW_IDX.filter(i=>l.calls[i]).length;
+  if(key==='correos')return EM_IDX.filter(i=>l.calls[i]).length;
+  if(key==='ruc')return l.empresa?.ruc||'';
+  if(key==='facturacion')return l.empresa?.facturacion||'';
+  if(key==='condicion')return (l.empresa?.condicion||[]).join(', ');
+  if(key==='reunion')return l.reunion?'Sí':'No';
+  if(key==='diag')return l.diag?'Sí':'No';
+  if(key==='reunion_date'||key==='diag_date'||key==='next')return fmt(l[key]);
+  if(key==='bant_b')return l.bant?.b||'';
+  if(key==='bant_a')return l.bant?.a||'';
+  if(key==='bant_n')return l.bant?.n||'';
+  if(key==='bant_t')return l.bant?.t||'';
+  return String(l[key]||'');
+}
+
+function doExportXLSX(){
+  if(!_expSel.size){toast('Selecciona al menos una columna','err');return;}
+  const fields=EXPORT_FIELDS.filter(f=>_expSel.has(f.key));
+  const headers=fields.map(f=>f.label);
+  const rows=leads.map(l=>fields.map(f=>getLeadVal(l,f.key)));
+
+  // Use SheetJS for reliable XLSX generation
+  function loadAndExport(){
+    const wb2 = XLSX.utils.book_new();
+    const wsData = [headers, ...rows];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    // Style header row width
+    ws['!cols'] = headers.map(()=>({wch:20}));
+    XLSX.utils.book_append_sheet(wb2, ws, 'Leads');
+    XLSX.writeFile(wb2, `CRM_Leads_${new Date().toISOString().split('T')[0]}.xlsx`);
+    closeExport();
+    toast('✓ Excel descargado','ok');
+  }
+  if(typeof XLSX !== 'undefined'){
+    loadAndExport();
+  } else {
+    const script=document.createElement('script');
+    script.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    script.onload=loadAndExport;
+    script.onerror=()=>toast('Error al cargar librería Excel','err');
+    document.head.appendChild(script);
+  }
+}
+
+
+
+/* ── Sidebar toggle ── */
+function toggleSidebar(){
+  const sb=document.getElementById('sidebar');
+  const btn=document.getElementById('sb-toggle');
+  sb.classList.toggle('collapsed');
+  if(btn)btn.textContent=sb.classList.contains('collapsed')?'▶':'◀';
+}
+
+/* ── Next future action from hist ── */
+function nextFutureAction(l){
+  const td=today();
+  const futures=(l.hist||[]).filter(h=>h.exec_date&&h.exec_date>td).map(h=>h.exec_date).sort();
+  return futures.length?futures[0]:(l.next&&l.next>td?l.next:null);
+}
+
+/* ── onEventoChange ── */
+function onEventoChange(val,currentCampana){
+  // Auto-tag Diagnóstico 360 for Outbound
+  if(val==='Outbound'){
+    const campSel=document.getElementById('f-campana');
+    if(campSel){
+      // Look for Diagnóstico 360 campaign or set it manually
+      const d360=campanas.find(x=>x.nombre.toLowerCase().includes('diagnóstico')||x.nombre.toLowerCase().includes('360'));
+      if(d360&&campSel)campSel.value=d360.nombre;
+    }
+  }
+  const wrap=document.getElementById('f-campana-wrap');
+  if(wrap)wrap.style.display=val==='Campaña'?'':'none';
+}
+
+/* ── REJECT reason modal ── */
+let _pendingRejectLead=null;
+function showRejectModal(lead,onConfirm){
+  _pendingRejectLead={lead,onConfirm};
+  document.getElementById('reject-reason-sel').value='';
+  document.getElementById('reject-reason-note').value='';
+  document.getElementById('mo-reject').style.display='flex';
+}
+function cancelReject(){
+  document.getElementById('mo-reject').style.display='none';
+  _pendingRejectLead=null;
+}
+function confirmReject(){
+  const reason=document.getElementById('reject-reason-sel').value;
+  if(!reason){toast('Selecciona un motivo de descarte','err');return;}
+  const note=document.getElementById('reject-reason-note').value.trim();
+  document.getElementById('mo-reject').style.display='none';
+  if(_pendingRejectLead){
+    const {lead,onConfirm}=_pendingRejectLead;
+    lead.reject_reason=reason+(note?' — '+note:'');
+    if(!lead.hist)lead.hist=[];
+    lead.hist.push({ts:nowTs(),tipo:'Nota',nota:'REJECT: '+lead.reject_reason,exec_date:''});
+    onConfirm(lead);
+  }
+  _pendingRejectLead=null;
+}
+
+/* REJECT interception handled inline in saveMo via _pendingRejectReason */
+let _pendingRejectReason='';
+
+/* ── Task action modal ── */
+let _taskLeadId=null;
+function openTaskAction(id){
+  _taskLeadId=id;
+  const l=leads.find(x=>String(x.id)===String(id));if(!l)return;
+  document.getElementById('task-modal-title').textContent=l.razon||'Lead';
+  document.getElementById('task-modal-sub').textContent='Próxima acción: '+(l.next?fmt(l.next):'Sin fecha');
+  document.getElementById('task-postpone-date').value='';
+  document.getElementById('mo-task').style.display='flex';
+}
+function closeTaskModal(){document.getElementById('mo-task').style.display='none';_taskLeadId=null;}
+async function doTaskDone(){
+  const l=leads.find(x=>String(x.id)===String(_taskLeadId));if(!l)return;
+  if(!l.hist)l.hist=[];
+  l.hist.push({ts:nowTs(),tipo:'Tarea',nota:'Tarea marcada como realizada',exec_date:l.next||today()});
+  l.next='';
+  closeTaskModal();
+  await saveLead(l);
+  renderTareas();
+  toast('✓ Tarea marcada como realizada','ok');
+}
+async function doTaskPostpone(){
+  const newDate=document.getElementById('task-postpone-date').value;
+  if(!newDate){toast('Selecciona la nueva fecha','err');return;}
+  const l=leads.find(x=>String(x.id)===String(_taskLeadId));if(!l)return;
+  if(!l.hist)l.hist=[];
+  l.hist.push({ts:nowTs(),tipo:'Tarea',nota:'Tarea aplazada a '+fmt(newDate),exec_date:newDate});
+  l.next=newDate;
+  closeTaskModal();
+  await saveLead(l);
+  renderTareas();
+  toast('📅 Tarea aplazada a '+fmt(newDate),'ok');
+}
+
+/* ── Edit hist item (modal) ── */
+let _ehLid=null,_ehIdx=null;
+function editHistItem(lid,idx){
+  const l=leads.find(x=>String(x.id)===String(lid));if(!l||!l.hist)return;
+  const h=l.hist[idx];
+  _ehLid=lid;_ehIdx=idx;
+  document.getElementById('eh-nota').value=h.nota||'';
+  document.getElementById('eh-fecha').value=h.exec_date||'';
+  document.getElementById('mo-edit-hist').style.display='flex';
+  setTimeout(()=>document.getElementById('eh-nota').focus(),80);
+}
+function closeEditHist(){document.getElementById('mo-edit-hist').style.display='none';_ehLid=null;_ehIdx=null;}
+function saveEditHist(){
+  if(_ehLid===null||_ehIdx===null)return;
+  const l=leads.find(x=>String(x.id)===String(_ehLid));if(!l||!l.hist)return;
+  const nota=document.getElementById('eh-nota').value.trim();
+  const fecha=document.getElementById('eh-fecha').value.trim();
+  if(nota)l.hist[_ehIdx].nota=nota;
+  l.hist[_ehIdx].exec_date=fecha;
+  closeEditHist();
+  saveLead(l).then(()=>renderHistorial());
+  toast('✓ Nota actualizada','ok');
+}
+
+/* ── CAMPAÑAS CRUD ── */
+let _editCampanaId=null;
+function renderCampanas(){
+  const cont=document.getElementById('campanas-list');
+  if(!cont)return;
+  if(!campanas.length){
+    cont.innerHTML='<div style="padding:30px;color:var(--text3);text-align:center;grid-column:1/-1">No hay campañas creadas. Crea la primera con "+ Nueva Campaña".</div>';
+    return;
+  }
+  cont.innerHTML=campanas.map(c=>{
+    const leadsC=leads.filter(l=>l.campana===c.nombre||l.evento===c.nombre);
+    return`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.04)">
+      <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">${c.nombre}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">${c.fecha_inicio?'Inicio: '+fmt(c.fecha_inicio):''} ${c.responsable?'· '+c.responsable:''}</div>
+        </div>
+        <span style="background:var(--bbg);color:var(--blue);border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700">${leadsC.length} leads</span>
+      </div>
+      ${c.descripcion?`<div style="font-size:11px;color:var(--text2);margin-bottom:10px;line-height:1.5">${c.descripcion}</div>`:''}
+      <div style="display:flex;gap:6px">
+        <button class="ibt" onclick="editCampana('${c.id}')">✏️ Editar</button>
+        <button class="del-btn" onclick="deleteCampanaConfirm('${c.id}')">🗑 Eliminar</button>
+      </div>
+      ${leadsC.length?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+        <div style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Leads vinculados</div>
+        <div style="display:flex;flex-direction:column;gap:4px">${leadsC.slice(0,5).map(l=>`<div style="font-size:11px;color:var(--text2);display:flex;align-items:center;gap:6px"><span class="led ${sC(l.sem)}"></span>${l.razon}</div>`).join('')}${leadsC.length>5?`<div style="font-size:10px;color:var(--text3)">+${leadsC.length-5} más...</div>`:''}</div>
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+function openNewCampana(){
+  _editCampanaId=null;
+  document.getElementById('c-nombre').value='';
+  document.getElementById('c-fecha').value='';
+  document.getElementById('c-resp').value='';
+  document.getElementById('c-desc').value='';
+  document.getElementById('mo-campana-title').textContent='Nueva Campaña';
+  document.getElementById('mo-campana').style.display='flex';
+}
+function editCampana(id){
+  const c=campanas.find(x=>x.id===id);if(!c)return;
+  _editCampanaId=id;
+  document.getElementById('c-nombre').value=c.nombre||'';
+  document.getElementById('c-fecha').value=c.fecha_inicio||'';
+  document.getElementById('c-resp').value=c.responsable||'';
+  document.getElementById('c-desc').value=c.descripcion||'';
+  document.getElementById('mo-campana-title').textContent='Editar Campaña';
+  document.getElementById('mo-campana').style.display='flex';
+}
+function closeCampana(){document.getElementById('mo-campana').style.display='none';_editCampanaId=null;}
+function saveCampana(){
+  const nombre=document.getElementById('c-nombre').value.trim();
+  if(!nombre){toast('El nombre es obligatorio','err');return;}
+  if(_editCampanaId){
+    const c=campanas.find(x=>x.id===_editCampanaId);if(c){
+      c.nombre=nombre;c.fecha_inicio=document.getElementById('c-fecha').value;
+      c.responsable=document.getElementById('c-resp').value;
+      c.descripcion=document.getElementById('c-desc').value.trim();
+    }
+  }else{
+    campanas.push({id:Date.now().toString(),nombre,fecha_inicio:document.getElementById('c-fecha').value,responsable:document.getElementById('c-resp').value,descripcion:document.getElementById('c-desc').value.trim(),creado:today()});
+  }
+  // Update TH_OPTIONS_MAP for evento (include campaign names)
+  TH_OPTIONS_MAP.evento=['Inbound','Outbound','SAP',...campanas.map(c=>c.nombre)];
+  closeCampana();
+  renderCampanas();
+  toast('✓ Campaña guardada','ok');
+  // Persist to Sheet
+  const campToSave=_editCampanaId?campanas.find(x=>x.id===_editCampanaId):campanas[campanas.length-1];
+  if(campToSave)apiCall({action:'saveCampana',campana:campToSave}).catch(()=>{});
+}
+function deleteCampanaConfirm(id){
+  const c=campanas.find(x=>x.id===id);if(!c)return;
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:800;display:flex;align-items:center;justify-content:center';
+  ov.innerHTML=`<div style="background:var(--surface);border-radius:12px;padding:24px 28px;max-width:340px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.18);border:1px solid var(--border)">
+    <div style="font-size:15px;font-weight:700;margin-bottom:8px">¿Eliminar campaña?</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:20px">"${c.nombre}" será eliminada. Los leads vinculados conservarán el nombre pero sin campaña activa.</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button id="dc-cancel" style="padding:7px 16px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer">Cancelar</button>
+      <button id="dc-confirm" style="padding:7px 16px;border-radius:8px;border:none;background:var(--red);color:#fff;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer">Eliminar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  document.getElementById('dc-cancel').onclick=()=>ov.remove();
+  document.getElementById('dc-confirm').onclick=()=>{
+    campanas=campanas.filter(x=>x.id!==id);
+    ov.remove();renderCampanas();toast('Campaña eliminada','ok');
+    apiCall({action:'deleteCampana',id}).catch(()=>{});
+  };
+}
+
+
+
+/* ══ EVENTOS CORPORATIVOS — Complete CRUD ══ */
+function openNewEvento(){
+  _editEventoId=null;
+  ['ev-nombre','ev-lugar','ev-desc'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const ef=document.getElementById('ev-fecha');if(ef)ef.value='';
+  const er=document.getElementById('ev-resp');if(er)er.value='';
+  const ec=document.getElementById('ev-cap');if(ec)ec.value='';
+  const mt=document.getElementById('mo-evento-title');if(mt)mt.textContent='Nuevo Evento Corporativo';
+  const mo=document.getElementById('mo-evento');if(mo)mo.style.display='flex';
+}
+function editEvento(id){
+  const ev=eventosC.find(x=>x.id===id);if(!ev)return;
+  _editEventoId=id;
+  const set=(elId,val)=>{const el=document.getElementById(elId);if(el)el.value=val||'';};
+  set('ev-nombre',ev.nombre);set('ev-fecha',ev.fecha);set('ev-lugar',ev.lugar);
+  set('ev-resp',ev.responsable);set('ev-cap',ev.capacidad);set('ev-desc',ev.descripcion);
+  const mt=document.getElementById('mo-evento-title');if(mt)mt.textContent='Editar Evento';
+  const mo=document.getElementById('mo-evento');if(mo)mo.style.display='flex';
+}
+function closeEvento(){
+  const mo=document.getElementById('mo-evento');if(mo)mo.style.display='none';
+  _editEventoId=null;
+}
+async function saveEvento(){
+  const nombre=(document.getElementById('ev-nombre')?.value||'').trim();
+  if(!nombre){toast('El nombre es obligatorio','err');return;}
+  const id=_editEventoId||Date.now().toString();
+  const ev={
+    id,nombre,
+    fecha:document.getElementById('ev-fecha')?.value||'',
+    lugar:(document.getElementById('ev-lugar')?.value||'').trim(),
+    responsable:document.getElementById('ev-resp')?.value||'',
+    capacidad:document.getElementById('ev-cap')?.value||'',
+    descripcion:(document.getElementById('ev-desc')?.value||'').trim(),
+    creado:_editEventoId?(eventosC.find(x=>x.id===_editEventoId)?.creado||today()):today()
+  };
+  if(_editEventoId){
+    const idx=eventosC.findIndex(x=>x.id===_editEventoId);
+    if(idx>-1)eventosC[idx]={...eventosC[idx],...ev};
+  }else{
+    eventosC.push({...ev,leads:[]});
+  }
+  closeEvento();renderEventos();toast('✓ Evento guardado','ok');
+  try{
+    const r=await apiCall({action:'saveEvento',evento:ev});
+    if(r.error)toast('Error Sheet: '+r.error,'err');
+  }catch(e){toast('Sin conexión: evento guardado localmente','ok');}
+}
+function deleteEventoConfirm(id){
+  const ev=eventosC.find(x=>x.id===id);if(!ev)return;
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:800;display:flex;align-items:center;justify-content:center';
+  ov.innerHTML=`<div style="background:var(--surface);border-radius:12px;padding:24px 28px;max-width:340px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.18);border:1px solid var(--border)">
+    <div style="font-size:15px;font-weight:700;margin-bottom:8px">¿Eliminar evento?</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:20px">"${ev.nombre}" y todos sus registros serán eliminados.</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button id="de-c" style="padding:7px 16px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-family:inherit;font-size:12px;cursor:pointer">Cancelar</button>
+      <button id="de-ok" style="padding:7px 16px;border-radius:8px;border:none;background:var(--red);color:#fff;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Eliminar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  document.getElementById('de-c').onclick=()=>ov.remove();
+  document.getElementById('de-ok').onclick=()=>{
+    eventosC=eventosC.filter(x=>x.id!==id);
+    saveEventosLocal();ov.remove();renderEventos();toast('Evento eliminado','ok');
+  };
+}
+
+
+/* ══ TAGS SYSTEM ══ */
+let _tagsLeadId=null,_tagsWorking=[],_tagsSelectedColor=0;
+
+function openTagsModal(leadId){
+  _tagsLeadId=leadId;
+  const l=leads.find(x=>String(x.id)===String(leadId));if(!l)return;
+  _tagsWorking=(l.tags||[]).map(t=>({...t}));
+  renderTagsModal();
+  const mo=document.getElementById('mo-tags');if(mo)mo.style.display='flex';
+}
+function closeTagsModal(){
+  const mo=document.getElementById('mo-tags');if(mo)mo.style.display='none';
+  _tagsLeadId=null;_tagsWorking=[];
+}
+function renderTagsModal(){
+  const cont=document.getElementById('tags-current');
+  if(cont)cont.innerHTML=_tagsWorking.map((tg,i)=>`<span class="tag-pill" style="background:${tg.bg};color:${tg.tx}">${tg.label}<span class="tag-x" onclick="removeTag(${i})" style="margin-left:4px;cursor:pointer;opacity:.7">×</span></span>`).join('');
+  const picker=document.getElementById('tag-color-picker');
+  if(picker)picker.innerHTML=TAG_COLORS.map((tc,i)=>`<span onclick="_tagsSelectedColor=${i};renderTagsModal()" style="background:${tc.bg};color:${tc.tx};padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;cursor:pointer;border:2px solid ${i===_tagsSelectedColor?tc.tx:'transparent'}">${tc.name}</span>`).join('');
+}
+function removeTag(i){_tagsWorking.splice(i,1);renderTagsModal();}
+function addTagFromInput(){
+  const inp=document.getElementById('tag-new-input');
+  const label=(inp?.value||'').trim();if(!label)return;
+  const tc=TAG_COLORS[_tagsSelectedColor]||TAG_COLORS[0];
+  _tagsWorking.push({label,bg:tc.bg,tx:tc.tx});
+  if(inp)inp.value='';
+  renderTagsModal();
+}
+async function saveTagsModal(){
+  const l=leads.find(x=>String(x.id)===String(_tagsLeadId));if(!l)return;
+  l.tags=[..._tagsWorking];
+  closeTagsModal();
+  await saveLead(l);
+  renderTabla();
+  toast('✓ Tags guardados','ok');
+}
+
+
+function renderEventos(){
+  const cont=document.getElementById('eventos-list');
+  if(!cont)return;
+  if(!eventosC.length){
+    cont.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3);grid-column:1/-1;font-size:13px">No hay eventos. Crea el primero con "+ Nuevo Evento".</div>';
+    return;
+  }
+  cont.innerHTML=eventosC.map(ev=>{
+    const leadsEv=leads.filter(l=>l.eventos_c&&l.eventos_c.some(e=>e.id===ev.id));
+    const stats={};
+    EV_ESTADOS.forEach(s=>{stats[s]=leadsEv.filter(l=>l.eventos_c.find(e=>e.id===ev.id&&e.estado===s)).length;});
+    return`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.04)">
+      <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px">
+        <div style="flex:1"><div style="font-size:13px;font-weight:700">🎯 ${ev.nombre}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">${ev.fecha?'📅 '+fmt(ev.fecha):''} ${ev.lugar?'· 📍'+ev.lugar:''} ${ev.responsable?'· '+ev.responsable:''}</div></div>
+        <span style="background:var(--gbg);color:var(--gtxt);border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700">${leadsEv.length} leads</span>
+      </div>
+      ${ev.descripcion?`<div style="font-size:11px;color:var(--text2);margin-bottom:10px;line-height:1.5">${ev.descripcion}</div>`:''}
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px">
+        ${EV_ESTADOS.map(s=>{const ec=EV_ESTADO_COLORS[s];return`<span style="background:${ec.bg};color:${ec.tx};padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">${s}: ${stats[s]||0}</span>`;}).join('')}
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="ibt" onclick="openEventoDetail('${ev.id}')">👁 Ver Leads</button>
+        <button class="ibt" onclick="editEvento('${ev.id}')">✏️ Editar</button>
+        <button class="del-btn" onclick="deleteEventoConfirm('${ev.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function saveEventosLocal(){
+  try{localStorage.setItem('crm_eventos',JSON.stringify(eventosC));}catch(_){}
+}
+function loadEventosLocal(){
+  try{const d=localStorage.getItem('crm_eventos');if(d)eventosC=JSON.parse(d);}catch(_){}
+}
+
+function doLogin(){
+  const val=document.getElementById('login-pass').value;
+  if(val==='tifanyfernanda'){
+    document.getElementById('login-screen').style.display='none';
+    loading(true);loadLeads();
+  } else {
+    const err=document.getElementById('login-err');
+    err.textContent='Contraseña incorrecta';
+    document.getElementById('login-pass').value='';
+    document.getElementById('login-pass').focus();
+    setTimeout(()=>{err.textContent=''},2500);
+  }
+}
+
+// Loads after login
+</script>
+</body>
+</html>
