@@ -1375,7 +1375,7 @@ function renderDashboard(){
       {label:'Leads contactados (≥1 llamada registrada)',val:conCallHist,pct:trabajados>0?Math.round(conCallHist/trabajados*100)+'%':'—',color:'var(--green)'},
       {label:'Con exploración agendada',val:conExpl,pct:total>0?Math.round(conExpl/total*100)+'%':'—',color:'var(--blue)'},
       {label:'Con diagnóstico 360°',val:conDiag,pct:total>0?Math.round(conDiag/total*100)+'%':'—',color:'var(--purple)'},
-      {label:'Contactos por LinkedIn (historial)',val:linkedinAcep,pct:trabajados>0?Math.round(linkedinAcep/trabajados*100)+'%':'—',color:'#0a66c2'},
+      {label:'Contactados por LinkedIn',val:linkedinHist,pct:total>0?Math.round(linkedinHist/total*100)+'%':'—',color:'#0a66c2'},
       {label:'Correos enviados (historial)',val:leads.reduce((a,l)=>a+(l.hist||[]).filter(h=>h.tipo==='Correo Enviado').length,0),pct:'—',color:''},
     ];
     dEmbudo.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px">
@@ -2334,7 +2334,7 @@ function deleteEventoConfirm(id){
   document.getElementById('de-c').onclick=()=>ov.remove();
   document.getElementById('de-ok').onclick=()=>{
     eventosC=eventosC.filter(x=>x.id!==id);
-    saveEventosLocal();ov.remove();renderEventos();toast('Evento eliminado','ok');
+    apiCall({action:'deleteEvento',id}).catch(()=>{});ov.remove();renderEventos();toast('Evento eliminado','ok');
   };
 }
 
