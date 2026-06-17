@@ -903,6 +903,7 @@ async function loadLeads(){
 }
 
 function norm(l){
+  try{
   if(!Array.isArray(l.calls))l.calls=new Array(12).fill(0);
   while(l.calls.length<12)l.calls.push(0);
   l.calls=l.calls.map(Number);
@@ -914,13 +915,12 @@ function norm(l){
   if(!Array.isArray(l.empresa.condicion))l.empresa.condicion=l.empresa.condicion?[l.empresa.condicion]:[];
   l.reunion=l.reunion===true||l.reunion==='1'||l.reunion===1;
   l.diag=l.diag===true||l.diag==='1'||l.diag===1;
-  // Derive sem from status for consistency
   if(l.status==='ABIERTO')l.sem='g';
   else if(l.status==='HOLD')l.sem='o';
   else if(l.status==='REJECT')l.sem='r';
   else if(!l.sem)l.sem='r';
   if(!l.etapa)l.etapa='Contacto Inicial';
-  if(!l.encargado)l.encargado='';
+  if(!l.encargado)l.encargado='Tifany';
   if(!l.evento)l.evento='';
   if(!l.kam)l.kam='';
   if(!l.linkedin)l.linkedin='';
@@ -930,15 +930,16 @@ function norm(l){
   if(!l.nombre_lead)l.nombre_lead='';
   l.razon=upper(l.razon);
   if(!l.reject_reason)l.reject_reason='';
-  if(!Array.isArray(l.tags))l.tags=[];
-  if(!Array.isArray(l.eventos_c))l.eventos_c=[];
-  if(l.c4c===undefined)l.c4c=false;
-  if(l.c4c===undefined)l.c4c=false;
   if(!l.campana)l.campana='';
+  // Defensive: these columns may not exist yet in Sheet
+  try{if(!Array.isArray(l.tags))l.tags=[];}catch{l.tags=[];}
+  try{if(!Array.isArray(l.eventos_c))l.eventos_c=[];}catch{l.eventos_c=[];}
+  try{if(!l.c4c)l.c4c='';}catch{l.c4c='';}
   if(!['Inbound','Outbound','SAP','Campaña',''].includes(l.evento)&&campanas.some(c=>c.nombre===l.evento)){
     l.campana=l.evento;l.evento='Campaña';
   }
   return l;
+  }catch(e){console.warn('norm error',e,l);return l;}
 }
 
 async function saveLead(lead){
