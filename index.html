@@ -1875,24 +1875,25 @@ async function saveMo(overrideRejectReason){
 }
 
 function captureFormValues(){
-  const reunionChecked=document.getElementById('f-reunion')?.checked??false;
+  const reunionChecked=!!(document.getElementById('f-reunion')?.checked);
   const reunionDate=document.getElementById('f-reunion-date')?.value||'';
-  const diagChecked=document.getElementById('f-diag')?.checked??false;
+  const diagChecked=!!(document.getElementById('f-diag')?.checked);
   const diagDate=document.getElementById('f-diag-date')?.value||'';
   const eventoVal=document.getElementById('f-evento')?.value||'';
   const campanaVal=document.getElementById('f-campana')?.value||'';
+  let telVal='';try{telVal=getTelValue();}catch{}
   return {
-    razon:document.getElementById('f-razon')?.value?.trim()?.toUpperCase()||'',
-    sector:document.getElementById('f-sector')?.value?.trim()||'',
+    razon:(document.getElementById('f-razon')?.value||'').trim().toUpperCase(),
+    sector:(document.getElementById('f-sector')?.value||'').trim(),
     statusVal:document.getElementById('f-status')?.value||'ABIERTO',
     eventoVal,campanaVal,
     kam:document.getElementById('f-kam')?.value||'',
-    linkedin:document.getElementById('f-linkedin')?.value?.trim()||'',
-    contacto:document.getElementById('f-nom')?.value?.trim()||'',
-    apellido:document.getElementById('f-ape')?.value?.trim()||'',
-    cargo:document.getElementById('f-cargo')?.value?.trim()||'',
-    tel:getTelValue(),
-    email:document.getElementById('f-email')?.value?.trim()||'',
+    linkedin:(document.getElementById('f-linkedin')?.value||'').trim(),
+    contacto:(document.getElementById('f-nom')?.value||'').trim(),
+    apellido:(document.getElementById('f-ape')?.value||'').trim(),
+    cargo:(document.getElementById('f-cargo')?.value||'').trim(),
+    tel:telVal,
+    email:(document.getElementById('f-email')?.value||'').trim(),
     etapa:document.getElementById('f-etapa')?.value||'Contacto Inicial',
     next:document.getElementById('f-next')?.value||'',
     c4c:!!(document.getElementById('f-c4c')?.checked),
@@ -1903,8 +1904,8 @@ function captureFormValues(){
       n:document.getElementById('f-n')?.value||'',
       t:document.getElementById('f-t')?.value||''
     },
-    rucNew:(document.getElementById('f-ruc-new')||{value:''}).value.trim(),
-    factNew:(document.getElementById('f-fact-new')||{value:''}).value.trim(),
+    rucNew:(document.getElementById('f-ruc-new')?.value||'').trim(),
+    factNew:(document.getElementById('f-fact-new')?.value||'').trim(),
   };
 }
 
