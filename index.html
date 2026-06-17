@@ -1820,7 +1820,7 @@ async function saveMo(overrideRejectReason){
   const _statusNow=document.getElementById('f-status')?.value;
   const _exNow=editId?leads.find(x=>String(x.id)===String(editId)):null;
   if(_statusNow==='REJECT'&&(!_exNow||_exNow.status!=='REJECT')&&!overrideRejectReason){
-    showRejectModal({},async(lr)=>{await saveMo(lr.reject_reason);});
+    showRejectModal({},async(rejectReason)=>{await saveMo(rejectReason);});
     return;
   }
 
@@ -2122,13 +2122,11 @@ function confirmReject(){
   const reason=document.getElementById('reject-reason-sel').value;
   if(!reason){toast('Selecciona un motivo de descarte','err');return;}
   const note=document.getElementById('reject-reason-note').value.trim();
+  const rejectReason=reason+(note?' — '+note:'');
   document.getElementById('mo-reject').style.display='none';
   if(_pendingRejectLead){
-    const {lead,onConfirm}=_pendingRejectLead;
-    lead.reject_reason=reason+(note?' — '+note:'');
-    if(!lead.hist)lead.hist=[];
-    lead.hist.push({ts:nowTs(),tipo:'Nota',nota:'REJECT: '+lead.reject_reason,exec_date:''});
-    onConfirm(lead);
+    const {onConfirm}=_pendingRejectLead;
+    onConfirm(rejectReason);
   }
   _pendingRejectLead=null;
 }
