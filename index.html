@@ -566,6 +566,7 @@ tbody tr:hover td{background:#f0f4ff;transition:background .1s}
       <div class="dash-card"><div class="dash-title">Leads por Etapa</div><div class="bar-chart" id="detapa"></div></div>
       <div class="dash-card"><div class="dash-title">Tasa de Reactivación (HOLD → Exploración)</div><div class="bar-chart" id="dreact"></div></div>
       <div class="dash-card"><div class="dash-title">Motivos de Descarte (REJECT)</div><div class="bar-chart" id="dreject"></div></div>
+      <div class="dash-card"><div class="dash-title">⏱️ Tiempo Promedio de Gestión</div><div id="dtiempo"></div></div>
       <div class="dash-card full"><div class="dash-title">📊 Embudo de Prospección</div><div id="dembudo"></div></div>
       <div class="dash-card full"><div class="dash-title">Actividad Semanal — Últimas 8 semanas</div>
         <div style="overflow-x:auto"><div class="week-chart" id="dweek" style="min-width:480px"></div></div>
@@ -1411,7 +1412,52 @@ function renderDashboard(){
     </table>`;
   }
 
-  const dSector=document.getElementById('dsector');
+  // ── Tiempo promedio de gestión por status ──
+  const dtiempo=document.getElementById('dtiempo');
+  if(dtiempo){
+    const diffDays=(ts1,ts2)=>Math.round(Math.abs(new Date(ts2)-new Date(ts1))/864e5);
+    // Para cada lead calcula días desde primera interacción hasta hoy o hasta cambio
+    const calcDias=(l)=>{
+      if(!l.hist||!l.hist.length)return null;
+      const first=l.hist[0].ts;
+      const last=l.hist[l.hist.length-1].ts;
+      const ref=today();
+      // Si tiene hist con fechas ISO parseables
+      try{
+        const d0=new Date(first.includes('T')?first:first.replace(/(\d{2})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})/,'20$3-$2-$1T$4:$5'));
+        const d1=new Date(last.includes('T')?last:last.replace(/(\d{2})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})/,'20$3-$2-$1T$4:$5'));
+        if(isNaN(d0)||isNaN(d1))return null;
+        return Math.round((d1-d0)/864e5)||1;
+      }catch{return null;}
+    };
+    const abiertos=leads.filter(l=>l.status==='ABIERTO').map(calcDias).filter(x=>x!==null);
+    const holds=leads.filter(l=>l.status==='HOLD').map(calcDias).filter(x=>x!==null);
+    const rejects=leads.filter(l=>l.status==='REJECT').map(calcDias).filter(x=>x!==null);
+    const avg=arr=>arr.length?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length):0;
+    const pA=avg(abiertos),pH=avg(holds),pR=avg(rejects);
+    const maxD=Math.max(pA,pH,pR,1);
+    dtiempo.innerHTML=`
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:2px">Días promedio desde primera a última interacción</div>
+        ${[
+          {label:'🟢 ABIERTO',val:pA,n:abiertos.length,color:'var(--green)'},
+          {label:'🟠 HOLD',val:pH,n:holds.length,color:'var(--orange)'},
+          {label:'🔴 REJECT',val:pR,n:rejects.length,color:'var(--red)'},
+        ].map(r=>`
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px">
+              <span style="font-weight:600">${r.label}</span>
+              <span style="color:${r.color};font-weight:700">${r.val} días <span style="color:var(--text3);font-weight:400">(${r.n} leads)</span></span>
+            </div>
+            <div style="background:var(--s3);border-radius:20px;height:14px;overflow:hidden">
+              <div style="width:${Math.round(r.val/maxD*100)}%;height:100%;background:${r.color};border-radius:20px;transition:width .6s"></div>
+            </div>
+          </div>`).join('')}
+        <div style="margin-top:6px;padding-top:10px;border-top:1px solid var(--border);font-size:10px;color:var(--text3)">
+          💡 Un lead ABIERTO con más de <strong>${pA>0?pA+pR:'—'}</strong> días sin avanzar debería evaluarse para REJECT
+        </div>
+      </div>`;
+  }
   if(dSector){
     const sCount={};
     leads.forEach(l=>{if(l.sector){const s=l.sector.trim();sCount[s]=(sCount[s]||0)+1;}});
@@ -1816,76 +1862,91 @@ async function delMoHist(idx){
 async function saveMo(overrideRejectReason){
   const razon=document.getElementById('f-razon')?.value?.trim()?.toUpperCase();
   if(!razon){toast('La Razón Social es obligatoria','err');return;}
-  // REJECT check
   const _statusNow=document.getElementById('f-status')?.value;
   const _exNow=editId?leads.find(x=>String(x.id)===String(editId)):null;
   if(_statusNow==='REJECT'&&(!_exNow||_exNow.status!=='REJECT')&&!overrideRejectReason){
-    showRejectModal({},async(rejectReason)=>{await saveMo(rejectReason);});
+    // Capture all values NOW before modal opens
+    const snap=captureFormValues();
+    showRejectModal({},async(rejectReason)=>{await saveMoWithSnap(snap,rejectReason);});
     return;
   }
+  await saveMoWithSnap(captureFormValues(),overrideRejectReason||'');
+}
 
-  const sind=document.getElementById('sind');const sbtn=document.getElementById('sbtn');
-  if(sind)sind.style.display='flex';if(sbtn)sbtn.disabled=true;
-
-  const ex=editId?leads.find(x=>String(x.id)===String(editId)):null;
-
-  // Detectar si exploración/diagnóstico cambiaron
+function captureFormValues(){
   const reunionChecked=document.getElementById('f-reunion')?.checked??false;
   const reunionDate=document.getElementById('f-reunion-date')?.value||'';
   const diagChecked=document.getElementById('f-diag')?.checked??false;
   const diagDate=document.getElementById('f-diag-date')?.value||'';
+  const eventoVal=document.getElementById('f-evento')?.value||'';
+  const campanaVal=document.getElementById('f-campana')?.value||'';
+  return {
+    razon:document.getElementById('f-razon')?.value?.trim()?.toUpperCase()||'',
+    sector:document.getElementById('f-sector')?.value?.trim()||'',
+    statusVal:document.getElementById('f-status')?.value||'ABIERTO',
+    eventoVal,campanaVal,
+    kam:document.getElementById('f-kam')?.value||'',
+    linkedin:document.getElementById('f-linkedin')?.value?.trim()||'',
+    contacto:document.getElementById('f-nom')?.value?.trim()||'',
+    apellido:document.getElementById('f-ape')?.value?.trim()||'',
+    cargo:document.getElementById('f-cargo')?.value?.trim()||'',
+    tel:getTelValue(),
+    email:document.getElementById('f-email')?.value?.trim()||'',
+    etapa:document.getElementById('f-etapa')?.value||'Contacto Inicial',
+    next:document.getElementById('f-next')?.value||'',
+    c4c:!!(document.getElementById('f-c4c')?.checked),
+    reunionChecked,reunionDate,diagChecked,diagDate,
+    bant:{
+      b:document.getElementById('f-b')?.value||'',
+      a:document.getElementById('f-a')?.value||'',
+      n:document.getElementById('f-n')?.value||'',
+      t:document.getElementById('f-t')?.value||''
+    },
+    rucNew:(document.getElementById('f-ruc-new')||{value:''}).value.trim(),
+    factNew:(document.getElementById('f-fact-new')||{value:''}).value.trim(),
+  };
+}
 
-  // Auto-historial si exploración se activó
+async function saveMoWithSnap(snap,overrideRejectReason){
+  const sind=document.getElementById('sind');const sbtn=document.getElementById('sbtn');
+  if(sind)sind.style.display='flex';if(sbtn)sbtn.disabled=true;
+
+  const ex=editId?leads.find(x=>String(x.id)===String(editId)):null;
+  const {reunionChecked,reunionDate,diagChecked,diagDate,statusVal,eventoVal,campanaVal}=snap;
+
   if(reunionChecked&&!(ex&&ex.reunion)){
     _etmp.push({ts:nowTs(),tipo:'Reunión',nota:`Exploración marcada${reunionDate?' para '+fmt(reunionDate):''}`,exec_date:reunionDate});
   }
   if(diagChecked&&!(ex&&ex.diag)){
     _etmp.push({ts:nowTs(),tipo:'Diagnóstico',nota:`Diagnóstico 360° marcado${diagDate?' para '+fmt(diagDate):''}`,exec_date:diagDate});
   }
+  if(overrideRejectReason){
+    _etmp.push({ts:nowTs(),tipo:'Nota',nota:'REJECT: '+overrideRejectReason,exec_date:''});
+  }
 
-  // Semáforo derivado automáticamente del Status
-  const statusVal=document.getElementById('f-status').value;
   const sem=statusVal==='ABIERTO'?'g':statusVal==='HOLD'?'o':'r';
+  const campana=eventoVal==='Campaña'?campanaVal:(eventoVal&&!['Inbound','Outbound','SAP'].includes(eventoVal)?eventoVal:'');
 
   const lead={
-    id          : editId||Date.now().toString(),
-    razon,
-    nombre_lead : razon,
-    sector      : document.getElementById('f-sector').value.trim(),
-    evento    : document.getElementById('f-evento').value.trim(),
-    kam       : document.getElementById('f-kam').value.trim(),
-    linkedin  : document.getElementById('f-linkedin').value.trim(),
-    sem,
-    encargado : 'Tifany',
-    contacto  : document.getElementById('f-nom').value.trim(),
-    apellido  : document.getElementById('f-ape').value.trim(),
-    cargo     : document.getElementById('f-cargo').value.trim(),
-    tel       : getTelValue(),
-    email     : document.getElementById('f-email').value.trim(),
-    canal     : _ecanal.slice(),
-    etapa     : document.getElementById('f-etapa').value,
-    next      : document.getElementById('f-next').value,
-    status    : document.getElementById('f-status').value,
-    calls     : _ec.slice(),
-    reunion   : reunionChecked,
-    reunion_date: reunionDate,
-    diag      : diagChecked,
-    diag_date : diagDate,
-    bant:{
-      b:document.getElementById('f-b').value,
-      a:document.getElementById('f-a').value,
-      n:document.getElementById('f-n').value,
-      t:document.getElementById('f-t').value
-    },
-    c4c         : !!(document.getElementById('f-c4c')?.checked),
-    reject_reason: overrideRejectReason||(ex?ex.reject_reason||'':''),
-    campana     : (()=>{const ev=document.getElementById('f-evento').value;const cp=document.getElementById('f-campana')?.value||'';return ev==='Campaña'?cp:(ev&&!['Inbound','Outbound','SAP'].includes(ev)?ev:'');})(),
+    id:editId||Date.now().toString(),
+    razon:snap.razon,nombre_lead:snap.razon,
+    sector:snap.sector,evento:eventoVal,kam:snap.kam,linkedin:snap.linkedin,
+    sem,encargado:'Tifany',
+    contacto:snap.contacto,apellido:snap.apellido,cargo:snap.cargo,
+    tel:snap.tel,email:snap.email,
+    canal:_ecanal.slice(),etapa:snap.etapa,next:snap.next,
+    status:statusVal,calls:_ec.slice(),
+    reunion:reunionChecked,reunion_date:reunionDate,
+    diag:diagChecked,diag_date:diagDate,
+    bant:snap.bant,
+    c4c:snap.c4c,
+    reject_reason:overrideRejectReason||(ex?ex.reject_reason||'':''),
+    campana,
+    tags:ex?ex.tags||[]:[],
+    eventos_c:ex?ex.eventos_c||[]:[],
     hist:[...(ex?ex.hist||[]:[]),..._etmp],
-    empresa: ex?(ex.empresa||{ruc:'',condicion:[],facturacion:'',contactos:[]}):
-               {ruc:(document.getElementById('f-ruc-new')||{value:''}).value.trim(),
-                condicion:[],
-                facturacion:(document.getElementById('f-fact-new')||{value:''}).value.trim(),
-                contactos:[]},
+    empresa:ex?(ex.empresa||{ruc:'',condicion:[],facturacion:'',contactos:[]}):
+      {ruc:snap.rucNew,condicion:[],facturacion:snap.factNew,contactos:[]},
   };
 
   await saveLead(lead);
