@@ -417,10 +417,6 @@ tbody tr:hover td{background:#f0f4ff;transition:background .1s}
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
       <span class="nav-label">Campañas</span>
     </button>
-    <button class="nav-tab" onclick="setTab('eventos')" id="t-eventos" title="Eventos">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      <span class="nav-label">Eventos</span>
-    </button>
   </nav>
   <div class="sidebar-bottom"><div class="sidebar-bottom-content">
     <div style="font-size:10px;color:var(--sidebar-text);margin-bottom:8px;font-weight:600;letter-spacing:.05em">ACCIONES</div>
@@ -541,15 +537,6 @@ tbody tr:hover td{background:#f0f4ff;transition:background .1s}
     </div>
   </div>
 
-  <!-- EVENTOS CORPORATIVOS -->
-  <div id="view-eventos" style="display:none;padding:16px 20px">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-      <div style="flex:1;font-size:14px;font-weight:700;color:var(--text)">Eventos Corporativos</div>
-      <button class="btn btn-blue" onclick="openNewEvento()">+ Nuevo Evento</button>
-    </div>
-    <div id="eventos-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px"></div>
-  </div>
-
   <!-- CAMPAÑAS -->
   <div id="view-campanas" style="display:none;padding:16px 20px">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
@@ -563,11 +550,10 @@ tbody tr:hover td{background:#f0f4ff;transition:background .1s}
   <div id="view-dashboard" class="dash-wrap" style="display:none">
     <div class="kpi-row" id="kpis"></div>
     <div class="dash-grid">
+      <div class="dash-card"><div class="dash-title">Leads por Encargada</div><div class="bar-chart" id="denc"></div></div>
       <div class="dash-card"><div class="dash-title">Leads por Etapa</div><div class="bar-chart" id="detapa"></div></div>
       <div class="dash-card"><div class="dash-title">Tasa de Reactivación (HOLD → Exploración)</div><div class="bar-chart" id="dreact"></div></div>
       <div class="dash-card"><div class="dash-title">Motivos de Descarte (REJECT)</div><div class="bar-chart" id="dreject"></div></div>
-      <div class="dash-card"><div class="dash-title">⏱️ Tiempo Promedio de Gestión</div><div id="dtiempo"></div></div>
-      <div class="dash-card full"><div class="dash-title">📊 Embudo de Prospección</div><div id="dembudo"></div></div>
       <div class="dash-card full"><div class="dash-title">Actividad Semanal — Últimas 8 semanas</div>
         <div style="overflow-x:auto"><div class="week-chart" id="dweek" style="min-width:480px"></div></div>
       </div>
@@ -693,58 +679,6 @@ tbody tr:hover td{background:#f0f4ff;transition:background .1s}
   </div>
 </div>
 
-<!-- MODAL NUEVO/EDITAR EVENTO -->
-<div id="mo-evento" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:700;align-items:center;justify-content:center">
-  <div style="background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);width:92%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
-    <div class="mo-hdr"><div class="mo-title" id="mo-evento-title">Nuevo Evento</div><button class="mo-x" onclick="closeEvento()">&#x2715;</button></div>
-    <div class="mo-body" style="padding:16px 18px;display:flex;flex-direction:column;gap:12px">
-      <div class="fr">
-        <div class="field"><label>Nombre del Evento *</label><input id="ev-nombre" placeholder="Ej: Workshop Junio 2026"></div>
-        <div class="field"><label>Fecha</label><input id="ev-fecha" type="date"></div>
-      </div>
-      <div class="fr">
-        <div class="field"><label>Lugar / Modalidad</label><input id="ev-lugar" placeholder="Online / Lima / etc."></div>
-        <div class="field"><label>Capacidad</label><input id="ev-cap" type="number" placeholder="Nº asistentes"></div>
-      </div>
-      <div class="field"><label>Responsable</label>
-        <select id="ev-resp"><option value="">Sin asignar</option><option>Tifany</option></select>
-      </div>
-      <div class="field"><label>Descripción</label>
-        <textarea id="ev-desc" style="min-height:60px;resize:vertical" placeholder="Objetivo, audiencia, canal..."></textarea>
-      </div>
-    </div>
-    <div class="mo-ftr">
-      <button class="btn" onclick="closeEvento()">Cancelar</button>
-      <button class="btn btn-blue" onclick="saveEvento()">Guardar Evento</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL DETALLE EVENTO -->
-<div id="mo-evento-detail" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:700;align-items:center;justify-content:center">
-  <div style="background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);width:96%;max-width:700px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
-    <div class="mo-hdr">
-      <div><div class="mo-title" id="ev-detail-title">Evento</div><div style="font-size:11px;color:var(--text3)" id="ev-detail-sub"></div></div>
-      <button class="btn btn-blue" style="margin-left:auto;margin-right:8px" onclick="openAddLeadToEvento()">+ Agregar Lead</button>
-      <button class="mo-x" onclick="closeEventoDetail()">&#x2715;</button>
-    </div>
-    <div style="padding:12px 18px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--border)" id="ev-detail-stats"></div>
-    <div id="ev-detail-leads" style="padding:4px 0"></div>
-  </div>
-</div>
-
-<!-- MODAL AGREGAR LEAD A EVENTO -->
-<div id="mo-add-lead-evento" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:800;align-items:center;justify-content:center">
-  <div style="background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);width:92%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
-    <div class="mo-hdr"><div class="mo-title">➕ Agregar Lead al Evento</div><button class="mo-x" onclick="closeAddLeadEvento()">&#x2715;</button></div>
-    <div style="padding:12px 18px">
-      <input id="ev-search-lead" placeholder="Buscar empresa o contacto..." style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);font-size:12px;font-family:inherit;margin-bottom:10px" oninput="renderAddLeadList()">
-      <div id="ev-add-lead-list" style="display:flex;flex-direction:column;gap:6px;max-height:400px;overflow-y:auto"></div>
-    </div>
-    <div class="mo-ftr"><button class="btn" onclick="closeAddLeadEvento()">Cerrar</button></div>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <!-- MODAL REJECT REASON -->
@@ -807,27 +741,8 @@ const ENCS=['Tifany'];
 const KAMS=['Raul Izquierdo','Ximena Cerdán','Delia Vasquez','Walter Patiño'];
 const EVENTOS=['Inbound','Outbound','SAP','Campaña'];
 let campanas=[];
-let eventosC=[];
-let _editEventoId=null;
 const STATUS_OPTIONS=['ABIERTO','HOLD','REJECT'];
 const COND_OPTS=['PRICO','Agente de Retención','Agente de Percepción','Buen Contribuyente','Regular','Otro'];
-
-const TAG_COLORS=[
-  {bg:'#fce8e8',tx:'#9e1b00',name:'Rojo'},{bg:'#fff3e0',tx:'#7c4a00',name:'Naranja'},
-  {bg:'#fffde7',tx:'#6b5000',name:'Amarillo'},{bg:'#e8f5e9',tx:'#1b5e20',name:'Verde'},
-  {bg:'#e3f2fd',tx:'#0d47a1',name:'Azul'},{bg:'#f3e5f5',tx:'#4a148c',name:'Morado'},
-  {bg:'#fce4ec',tx:'#880e4f',name:'Rosa'},{bg:'#e0f7fa',tx:'#006064',name:'Cyan'},
-  {bg:'#eceff1',tx:'#263238',name:'Gris'},{bg:'#deebff',tx:'#0747a6',name:'Azul claro'},
-  {bg:'#e3fcf0',tx:'#006644',name:'Verde menta'},
-];
-const EV_ESTADOS=['Invitado','Confirmó','Asistió','Rechazó','No asistió'];
-const EV_ESTADO_COLORS={
-  'Invitado':{bg:'#deebff',tx:'#0747a6'},
-  'Confirmó':{bg:'#e3fcf0',tx:'#006644'},
-  'Asistió':{bg:'#00875a',tx:'#fff'},
-  'Rechazó':{bg:'#ffecea',tx:'#9e1b00'},
-  'No asistió':{bg:'#eceff1',tx:'#546e7a'}
-};
 
 // calls layout:
 // [0-5]  = Llamadas/WhatsApp (LW1..LW6)
@@ -891,10 +806,6 @@ async function loadLeads(){
       campanas=(dc.campanas||[]);
       TH_OPTIONS_MAP.evento=['Inbound','Outbound','SAP',...campanas.map(c=>c.nombre)];
     }catch(_){}
-    try{
-      const de=await fetch(API+'?action=getEventos').then(r=>r.json());
-      eventosC=(de.eventos||[]).filter(e=>e.nombre).map(e=>({...e,id:e.id||e.nombre+Date.now()}));
-    }catch(_){}
     filterAll();
     renderAll();
     toast('✓ '+leads.length+' leads cargados','ok');
@@ -903,7 +814,6 @@ async function loadLeads(){
 }
 
 function norm(l){
-  try{
   if(!Array.isArray(l.calls))l.calls=new Array(12).fill(0);
   while(l.calls.length<12)l.calls.push(0);
   l.calls=l.calls.map(Number);
@@ -915,12 +825,13 @@ function norm(l){
   if(!Array.isArray(l.empresa.condicion))l.empresa.condicion=l.empresa.condicion?[l.empresa.condicion]:[];
   l.reunion=l.reunion===true||l.reunion==='1'||l.reunion===1;
   l.diag=l.diag===true||l.diag==='1'||l.diag===1;
+  // Derive sem from status for consistency
   if(l.status==='ABIERTO')l.sem='g';
   else if(l.status==='HOLD')l.sem='o';
   else if(l.status==='REJECT')l.sem='r';
   else if(!l.sem)l.sem='r';
   if(!l.etapa)l.etapa='Contacto Inicial';
-  if(!l.encargado)l.encargado='Tifany';
+  if(!l.encargado)l.encargado='';
   if(!l.evento)l.evento='';
   if(!l.kam)l.kam='';
   if(!l.linkedin)l.linkedin='';
@@ -930,16 +841,14 @@ function norm(l){
   if(!l.nombre_lead)l.nombre_lead='';
   l.razon=upper(l.razon);
   if(!l.reject_reason)l.reject_reason='';
+  if(!Array.isArray(l.tags))l.tags=[];
+  if(l.c4c===undefined)l.c4c=false;
+  if(l.c4c===undefined)l.c4c=false;
   if(!l.campana)l.campana='';
-  // Defensive: these columns may not exist yet in Sheet
-  try{if(!Array.isArray(l.tags))l.tags=[];}catch{l.tags=[];}
-  try{if(!Array.isArray(l.eventos_c))l.eventos_c=[];}catch{l.eventos_c=[];}
-  try{if(!l.c4c)l.c4c='';}catch{l.c4c='';}
   if(!['Inbound','Outbound','SAP','Campaña',''].includes(l.evento)&&campanas.some(c=>c.nombre===l.evento)){
     l.campana=l.evento;l.evento='Campaña';
   }
   return l;
-  }catch(e){console.warn('norm error',e,l);return l;}
 }
 
 async function saveLead(lead){
@@ -950,7 +859,7 @@ async function saveLead(lead){
     if(r.error)throw new Error(r.error);
     const i=leads.findIndex(x=>String(x.id)===String(lead.id));
     if(i>-1)leads[i]=norm(lead);else leads.push(norm(lead));
-    if(typeof filterAll==='function')filterAll();else{filtered=leads.slice();}
+    filtered=leads.slice();
     renderAll();
     toast('✓ Guardado: '+lead.razon,'ok');
   }catch(e){toast('Error al guardar: '+e.message,'err');}
@@ -999,7 +908,7 @@ async function deleteLead(id){
     const r=await apiCall({action:'delete',id:String(id)});
     if(r.error)throw new Error(r.error);
     leads=leads.filter(x=>String(x.id)!==String(id));
-    if(typeof filterAll==='function')filterAll();else{filtered=leads.slice();}
+    filterAll();
     renderAll();
     toast('Lead eliminado','ok');
   }catch(e){toast('Error: '+e.message,'err');}
@@ -1007,7 +916,7 @@ async function deleteLead(id){
 }
 
 /* ── Render ── */
-function renderAll(){renderAgenda();renderStats();if(tab==='tabla')renderTabla();else if(tab==='kanban')renderKanban();else if(tab==='historial')renderHistorial();else if(tab==='tareas')renderTareas();else if(tab==='dashboard')renderDashboard();else if(tab==='campanas')renderCampanas();else if(tab==='eventos')renderEventos();}
+function renderAll(){renderAgenda();renderStats();if(tab==='tabla')renderTabla();else if(tab==='kanban')renderKanban();else if(tab==='historial')renderHistorial();else if(tab==='tareas')renderTareas();else if(tab==='dashboard')renderDashboard();}
 
 function renderAgenda(){
   const td=today();
@@ -1059,25 +968,6 @@ function setThFilter(key,val){
 document.addEventListener('click',()=>{
   Object.keys(TH_OPTIONS_MAP).forEach(k=>{const m=document.getElementById('thfm-'+k);if(m)m.classList.remove('open');});
 });
-
-/* ── filterAll early definition ── */
-function filterAll(){
-  const q=(document.getElementById('q')||{value:''}).value.toLowerCase();
-  const sv=(document.getElementById('f-sem')||{value:''}).value;
-  const se=(document.getElementById('f-etapa')||{value:''}).value;
-  const thEv=TH_FILTERS.evento;
-  const thKam=TH_FILTERS.kam;
-  const thSt=TH_FILTERS.status;
-  filtered=leads.filter(l=>{
-    const m=!q||(l.razon+' '+l.contacto+' '+l.apellido+' '+l.tel+' '+(l.status||'')+' '+(l.evento||'')+' '+(l.kam||'')+' '+(l.nombre_lead||'')).toLowerCase().includes(q);
-    const st=!sv||(sv==='g'?l.status==='ABIERTO':sv==='o'?l.status==='HOLD':l.status==='REJECT');
-    const thEvM=!thEv||l.evento===thEv;
-    const thKamM=!thKam||l.kam===thKam;
-    const thStM=!thSt||l.status===thSt;
-    return m&&st&&(!se||l.etapa===se)&&thEvM&&thKamM&&thStM;
-  });
-  if(tab==='tabla')renderTabla();else if(tab==='kanban')renderKanban();
-}
 
 /* ── Tabla principal — SIN círculos, CON mini-progreso ── */
 function renderTabla(){
@@ -1379,86 +1269,7 @@ function renderDashboard(){
       <div class="week-lbl">${w.lbl}</div>
     </div>`).join('');
   // Sector distribution
-
-  // Embudo de Prospección (tipo reporte Excel)
-  const dEmbudo=document.getElementById('dembudo');
-  if(dEmbudo){
-    const conTel=leads.filter(l=>l.tel&&l.tel.trim()).length;
-    const trabajados=leads.filter(l=>(l.hist||[]).some(h=>h.tipo==='Llamada/WhatsApp')).length;
-    const totalLlam=leads.reduce((a,l)=>a+(l.hist||[]).filter(h=>h.tipo==='Llamada/WhatsApp').length,0);
-    const contesto=leads.filter(l=>(l.hist||[]).some(h=>h.tipo==='Llamada/WhatsApp'&&(h.nota||'').toLowerCase().includes('contest'))).length;
-    const linkedinAcep=leads.filter(l=>(l.hist||[]).some(h=>h.tipo==='LinkedIn')).length;
-    const rows=[
-      {label:'Leads en cartera (universo)',val:total,pct:'100%',color:''},
-      {label:'Leads con teléfono válido',val:conTel,pct:total>0?Math.round(conTel/total*100)+'%':'—',color:''},
-      {label:'Leads trabajados (≥1 llamada)',val:trabajados,pct:total>0?Math.round(trabajados/total*100)+'%':'—',color:'var(--orange)'},
-      {label:'Llamadas totales realizadas',val:totalLlam,pct:'—',color:''},
-      {label:'Leads contactados (≥1 llamada registrada)',val:conCallHist,pct:trabajados>0?Math.round(conCallHist/trabajados*100)+'%':'—',color:'var(--green)'},
-      {label:'Con exploración agendada',val:conExpl,pct:total>0?Math.round(conExpl/total*100)+'%':'—',color:'var(--blue)'},
-      {label:'Con diagnóstico 360°',val:conDiag,pct:total>0?Math.round(conDiag/total*100)+'%':'—',color:'var(--purple)'},
-      {label:'Contactados por LinkedIn',val:linkedinHist,pct:total>0?Math.round(linkedinHist/total*100)+'%':'—',color:'#0a66c2'},
-      {label:'Correos enviados (historial)',val:leads.reduce((a,l)=>a+(l.hist||[]).filter(h=>h.tipo==='Correo Enviado').length,0),pct:'—',color:''},
-    ];
-    dEmbudo.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px">
-      <thead><tr style="background:var(--sidebar);color:#fff">
-        <th style="padding:8px 12px;text-align:left;font-size:10px;letter-spacing:.05em">ETAPA</th>
-        <th style="padding:8px 12px;text-align:center;font-size:10px;letter-spacing:.05em">CANTIDAD</th>
-        <th style="padding:8px 12px;text-align:center;font-size:10px;letter-spacing:.05em">% CARTERA</th>
-      </tr></thead>
-      <tbody>${rows.map((r,i)=>`<tr style="border-bottom:1px solid var(--border);background:${i%2?'var(--s2)':'var(--surface)'}">
-        <td style="padding:8px 12px;font-weight:500">${r.label}</td>
-        <td style="padding:8px 12px;text-align:center;font-weight:700;font-size:14px;color:${r.color||'var(--text)'}">${r.val}</td>
-        <td style="padding:8px 12px;text-align:center;font-weight:600;color:${r.color||'var(--text2)'}">${r.pct}</td>
-      </tr>`).join('')}</tbody>
-    </table>`;
-  }
-
-  // ── Tiempo promedio de gestión por status ──
-  const dtiempo=document.getElementById('dtiempo');
-  if(dtiempo){
-    const diffDays=(ts1,ts2)=>Math.round(Math.abs(new Date(ts2)-new Date(ts1))/864e5);
-    // Para cada lead calcula días desde primera interacción hasta hoy o hasta cambio
-    const calcDias=(l)=>{
-      if(!l.hist||!l.hist.length)return null;
-      const first=l.hist[0].ts;
-      const last=l.hist[l.hist.length-1].ts;
-      const ref=today();
-      // Si tiene hist con fechas ISO parseables
-      try{
-        const d0=new Date(first.includes('T')?first:first.replace(/(\d{2})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})/,'20$3-$2-$1T$4:$5'));
-        const d1=new Date(last.includes('T')?last:last.replace(/(\d{2})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})/,'20$3-$2-$1T$4:$5'));
-        if(isNaN(d0)||isNaN(d1))return null;
-        return Math.round((d1-d0)/864e5)||1;
-      }catch{return null;}
-    };
-    const abiertos=leads.filter(l=>l.status==='ABIERTO').map(calcDias).filter(x=>x!==null);
-    const holds=leads.filter(l=>l.status==='HOLD').map(calcDias).filter(x=>x!==null);
-    const rejects=leads.filter(l=>l.status==='REJECT').map(calcDias).filter(x=>x!==null);
-    const avg=arr=>arr.length?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length):0;
-    const pA=avg(abiertos),pH=avg(holds),pR=avg(rejects);
-    const maxD=Math.max(pA,pH,pR,1);
-    dtiempo.innerHTML=`
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <div style="font-size:10px;color:var(--text3);margin-bottom:2px">Días promedio desde primera a última interacción</div>
-        ${[
-          {label:'🟢 ABIERTO',val:pA,n:abiertos.length,color:'var(--green)'},
-          {label:'🟠 HOLD',val:pH,n:holds.length,color:'var(--orange)'},
-          {label:'🔴 REJECT',val:pR,n:rejects.length,color:'var(--red)'},
-        ].map(r=>`
-          <div>
-            <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px">
-              <span style="font-weight:600">${r.label}</span>
-              <span style="color:${r.color};font-weight:700">${r.val} días <span style="color:var(--text3);font-weight:400">(${r.n} leads)</span></span>
-            </div>
-            <div style="background:var(--s3);border-radius:20px;height:14px;overflow:hidden">
-              <div style="width:${Math.round(r.val/maxD*100)}%;height:100%;background:${r.color};border-radius:20px;transition:width .6s"></div>
-            </div>
-          </div>`).join('')}
-        <div style="margin-top:6px;padding-top:10px;border-top:1px solid var(--border);font-size:10px;color:var(--text3)">
-          💡 Un lead ABIERTO con más de <strong>${pA>0?pA+pR:'—'}</strong> días sin avanzar debería evaluarse para REJECT
-        </div>
-      </div>`;
-  }
+  const dSector=document.getElementById('dsector');
   if(dSector){
     const sCount={};
     leads.forEach(l=>{if(l.sector){const s=l.sector.trim();sCount[s]=(sCount[s]||0)+1;}});
@@ -1508,6 +1319,7 @@ function openNew(){
   const blank={id:null,razon:'',contacto:'',apellido:'',cargo:'',tel:'',email:'',sector:'',evento:'',kam:'',linkedin:'',canal:[],calls:_ec.slice(),reunion:false,reunion_date:'',diag:false,diag_date:'',status:'ABIERTO',sem:'r',etapa:'Contacto Inicial',next:'',encargado:'',bant:{b:'',a:'',n:'',t:''},hist:[],empresa:{ruc:'',condicion:[],facturacion:'',contactos:[]}};
   buildModalEdit(blank);
   document.getElementById('mo').classList.add('open');
+  initTelList('');
 }
 
 function closeMo(){document.getElementById('mo').classList.remove('open');}
@@ -1863,92 +1675,76 @@ async function delMoHist(idx){
 async function saveMo(overrideRejectReason){
   const razon=document.getElementById('f-razon')?.value?.trim()?.toUpperCase();
   if(!razon){toast('La Razón Social es obligatoria','err');return;}
+  // REJECT check
   const _statusNow=document.getElementById('f-status')?.value;
   const _exNow=editId?leads.find(x=>String(x.id)===String(editId)):null;
   if(_statusNow==='REJECT'&&(!_exNow||_exNow.status!=='REJECT')&&!overrideRejectReason){
-    // Capture all values NOW before modal opens
-    const snap=captureFormValues();
-    showRejectModal({},async(rejectReason)=>{await saveMoWithSnap(snap,rejectReason);});
+    showRejectModal({},async(lr)=>{await saveMo(lr.reject_reason);});
     return;
   }
-  await saveMoWithSnap(captureFormValues(),overrideRejectReason||'');
-}
 
-function captureFormValues(){
-  const reunionChecked=!!(document.getElementById('f-reunion')?.checked);
-  const reunionDate=document.getElementById('f-reunion-date')?.value||'';
-  const diagChecked=!!(document.getElementById('f-diag')?.checked);
-  const diagDate=document.getElementById('f-diag-date')?.value||'';
-  const eventoVal=document.getElementById('f-evento')?.value||'';
-  const campanaVal=document.getElementById('f-campana')?.value||'';
-  let telVal='';try{telVal=getTelValue();}catch{}
-  return {
-    razon:(document.getElementById('f-razon')?.value||'').trim().toUpperCase(),
-    sector:(document.getElementById('f-sector')?.value||'').trim(),
-    statusVal:document.getElementById('f-status')?.value||'ABIERTO',
-    eventoVal,campanaVal,
-    kam:document.getElementById('f-kam')?.value||'',
-    linkedin:(document.getElementById('f-linkedin')?.value||'').trim(),
-    contacto:(document.getElementById('f-nom')?.value||'').trim(),
-    apellido:(document.getElementById('f-ape')?.value||'').trim(),
-    cargo:(document.getElementById('f-cargo')?.value||'').trim(),
-    tel:telVal,
-    email:(document.getElementById('f-email')?.value||'').trim(),
-    etapa:document.getElementById('f-etapa')?.value||'Contacto Inicial',
-    next:document.getElementById('f-next')?.value||'',
-    c4c:!!(document.getElementById('f-c4c')?.checked),
-    reunionChecked,reunionDate,diagChecked,diagDate,
-    bant:{
-      b:document.getElementById('f-b')?.value||'',
-      a:document.getElementById('f-a')?.value||'',
-      n:document.getElementById('f-n')?.value||'',
-      t:document.getElementById('f-t')?.value||''
-    },
-    rucNew:(document.getElementById('f-ruc-new')?.value||'').trim(),
-    factNew:(document.getElementById('f-fact-new')?.value||'').trim(),
-  };
-}
-
-async function saveMoWithSnap(snap,overrideRejectReason){
   const sind=document.getElementById('sind');const sbtn=document.getElementById('sbtn');
   if(sind)sind.style.display='flex';if(sbtn)sbtn.disabled=true;
 
   const ex=editId?leads.find(x=>String(x.id)===String(editId)):null;
-  const {reunionChecked,reunionDate,diagChecked,diagDate,statusVal,eventoVal,campanaVal}=snap;
 
+  // Detectar si exploración/diagnóstico cambiaron
+  const reunionChecked=document.getElementById('f-reunion')?.checked??false;
+  const reunionDate=document.getElementById('f-reunion-date')?.value||'';
+  const diagChecked=document.getElementById('f-diag')?.checked??false;
+  const diagDate=document.getElementById('f-diag-date')?.value||'';
+
+  // Auto-historial si exploración se activó
   if(reunionChecked&&!(ex&&ex.reunion)){
     _etmp.push({ts:nowTs(),tipo:'Reunión',nota:`Exploración marcada${reunionDate?' para '+fmt(reunionDate):''}`,exec_date:reunionDate});
   }
   if(diagChecked&&!(ex&&ex.diag)){
     _etmp.push({ts:nowTs(),tipo:'Diagnóstico',nota:`Diagnóstico 360° marcado${diagDate?' para '+fmt(diagDate):''}`,exec_date:diagDate});
   }
-  if(overrideRejectReason){
-    _etmp.push({ts:nowTs(),tipo:'Nota',nota:'REJECT: '+overrideRejectReason,exec_date:''});
-  }
 
+  // Semáforo derivado automáticamente del Status
+  const statusVal=document.getElementById('f-status').value;
   const sem=statusVal==='ABIERTO'?'g':statusVal==='HOLD'?'o':'r';
-  const campana=eventoVal==='Campaña'?campanaVal:(eventoVal&&!['Inbound','Outbound','SAP'].includes(eventoVal)?eventoVal:'');
 
   const lead={
-    id:editId||Date.now().toString(),
-    razon:snap.razon,nombre_lead:snap.razon,
-    sector:snap.sector,evento:eventoVal,kam:snap.kam,linkedin:snap.linkedin,
-    sem,encargado:'Tifany',
-    contacto:snap.contacto,apellido:snap.apellido,cargo:snap.cargo,
-    tel:snap.tel,email:snap.email,
-    canal:_ecanal.slice(),etapa:snap.etapa,next:snap.next,
-    status:statusVal,calls:_ec.slice(),
-    reunion:reunionChecked,reunion_date:reunionDate,
-    diag:diagChecked,diag_date:diagDate,
-    bant:snap.bant,
-    c4c:snap.c4c,
-    reject_reason:overrideRejectReason||(ex?ex.reject_reason||'':''),
-    campana,
-    tags:ex?ex.tags||[]:[],
-    eventos_c:ex?ex.eventos_c||[]:[],
+    id          : editId||Date.now().toString(),
+    razon,
+    nombre_lead : razon,
+    sector      : document.getElementById('f-sector').value.trim(),
+    evento    : document.getElementById('f-evento').value.trim(),
+    kam       : document.getElementById('f-kam').value.trim(),
+    linkedin  : document.getElementById('f-linkedin').value.trim(),
+    sem,
+    encargado : document.getElementById('f-enc').value,
+    contacto  : document.getElementById('f-nom').value.trim(),
+    apellido  : document.getElementById('f-ape').value.trim(),
+    cargo     : document.getElementById('f-cargo').value.trim(),
+    tel       : getTelValue(),
+    email     : document.getElementById('f-email').value.trim(),
+    canal     : _ecanal.slice(),
+    etapa     : document.getElementById('f-etapa').value,
+    next      : document.getElementById('f-next').value,
+    status    : document.getElementById('f-status').value,
+    calls     : _ec.slice(),
+    reunion   : reunionChecked,
+    reunion_date: reunionDate,
+    diag      : diagChecked,
+    diag_date : diagDate,
+    bant:{
+      b:document.getElementById('f-b').value,
+      a:document.getElementById('f-a').value,
+      n:document.getElementById('f-n').value,
+      t:document.getElementById('f-t').value
+    },
+    c4c         : !!(document.getElementById('f-c4c')?.checked),
+    reject_reason: overrideRejectReason||(ex?ex.reject_reason||'':''),
+    campana     : (()=>{const ev=document.getElementById('f-evento').value;const cp=document.getElementById('f-campana')?.value||'';return ev==='Campaña'?cp:(ev&&!['Inbound','Outbound','SAP'].includes(ev)?ev:'');})(),
     hist:[...(ex?ex.hist||[]:[]),..._etmp],
-    empresa:ex?(ex.empresa||{ruc:'',condicion:[],facturacion:'',contactos:[]}):
-      {ruc:snap.rucNew,condicion:[],facturacion:snap.factNew,contactos:[]},
+    empresa: ex?(ex.empresa||{ruc:'',condicion:[],facturacion:'',contactos:[]}):
+               {ruc:(document.getElementById('f-ruc-new')||{value:''}).value.trim(),
+                condicion:[],
+                facturacion:(document.getElementById('f-fact-new')||{value:''}).value.trim(),
+                contactos:[]},
   };
 
   await saveLead(lead);
@@ -2185,11 +1981,13 @@ function confirmReject(){
   const reason=document.getElementById('reject-reason-sel').value;
   if(!reason){toast('Selecciona un motivo de descarte','err');return;}
   const note=document.getElementById('reject-reason-note').value.trim();
-  const rejectReason=reason+(note?' — '+note:'');
   document.getElementById('mo-reject').style.display='none';
   if(_pendingRejectLead){
-    const {onConfirm}=_pendingRejectLead;
-    onConfirm(rejectReason);
+    const {lead,onConfirm}=_pendingRejectLead;
+    lead.reject_reason=reason+(note?' — '+note:'');
+    if(!lead.hist)lead.hist=[];
+    lead.hist.push({ts:nowTs(),tipo:'Nota',nota:'REJECT: '+lead.reject_reason,exec_date:''});
+    onConfirm(lead);
   }
   _pendingRejectLead=null;
 }
@@ -2373,30 +2171,25 @@ function closeEvento(){
   const mo=document.getElementById('mo-evento');if(mo)mo.style.display='none';
   _editEventoId=null;
 }
-async function saveEvento(){
+function saveEvento(){
   const nombre=(document.getElementById('ev-nombre')?.value||'').trim();
   if(!nombre){toast('El nombre es obligatorio','err');return;}
-  const id=_editEventoId||Date.now().toString();
   const ev={
-    id,nombre,
+    nombre,
     fecha:document.getElementById('ev-fecha')?.value||'',
     lugar:(document.getElementById('ev-lugar')?.value||'').trim(),
     responsable:document.getElementById('ev-resp')?.value||'',
     capacidad:document.getElementById('ev-cap')?.value||'',
     descripcion:(document.getElementById('ev-desc')?.value||'').trim(),
-    creado:_editEventoId?(eventosC.find(x=>x.id===_editEventoId)?.creado||today()):today()
   };
   if(_editEventoId){
     const idx=eventosC.findIndex(x=>x.id===_editEventoId);
     if(idx>-1)eventosC[idx]={...eventosC[idx],...ev};
   }else{
-    eventosC.push({...ev,leads:[]});
+    eventosC.push({id:Date.now().toString(),...ev,leads:[]});
   }
-  closeEvento();renderEventos();toast('✓ Evento guardado','ok');
-  try{
-    const r=await apiCall({action:'saveEvento',evento:ev});
-    if(r.error)toast('Error Sheet: '+r.error,'err');
-  }catch(e){toast('Sin conexión: evento guardado localmente','ok');}
+  saveEventosLocal();closeEvento();renderEventos();
+  toast('✓ Evento guardado','ok');
 }
 function deleteEventoConfirm(id){
   const ev=eventosC.find(x=>x.id===id);if(!ev)return;
@@ -2414,7 +2207,7 @@ function deleteEventoConfirm(id){
   document.getElementById('de-c').onclick=()=>ov.remove();
   document.getElementById('de-ok').onclick=()=>{
     eventosC=eventosC.filter(x=>x.id!==id);
-    apiCall({action:'deleteEvento',id}).catch(()=>{});ov.remove();renderEventos();toast('Evento eliminado','ok');
+    saveEventosLocal();ov.remove();renderEventos();toast('Evento eliminado','ok');
   };
 }
 
@@ -2457,44 +2250,6 @@ async function saveTagsModal(){
   toast('✓ Tags guardados','ok');
 }
 
-
-function renderEventos(){
-  const cont=document.getElementById('eventos-list');
-  if(!cont)return;
-  if(!eventosC.length){
-    cont.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3);grid-column:1/-1;font-size:13px">No hay eventos. Crea el primero con "+ Nuevo Evento".</div>';
-    return;
-  }
-  cont.innerHTML=eventosC.map(ev=>{
-    const leadsEv=leads.filter(l=>l.eventos_c&&l.eventos_c.some(e=>e.id===ev.id));
-    const stats={};
-    EV_ESTADOS.forEach(s=>{stats[s]=leadsEv.filter(l=>l.eventos_c.find(e=>e.id===ev.id&&e.estado===s)).length;});
-    return`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.04)">
-      <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px">
-        <div style="flex:1"><div style="font-size:13px;font-weight:700">🎯 ${ev.nombre}</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:2px">${ev.fecha?'📅 '+fmt(ev.fecha):''} ${ev.lugar?'· 📍'+ev.lugar:''} ${ev.responsable?'· '+ev.responsable:''}</div></div>
-        <span style="background:var(--gbg);color:var(--gtxt);border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700">${leadsEv.length} leads</span>
-      </div>
-      ${ev.descripcion?`<div style="font-size:11px;color:var(--text2);margin-bottom:10px;line-height:1.5">${ev.descripcion}</div>`:''}
-      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px">
-        ${EV_ESTADOS.map(s=>{const ec=EV_ESTADO_COLORS[s];return`<span style="background:${ec.bg};color:${ec.tx};padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">${s}: ${stats[s]||0}</span>`;}).join('')}
-      </div>
-      <div style="display:flex;gap:6px">
-        <button class="ibt" onclick="openEventoDetail('${ev.id}')">👁 Ver Leads</button>
-        <button class="ibt" onclick="editEvento('${ev.id}')">✏️ Editar</button>
-        <button class="del-btn" onclick="deleteEventoConfirm('${ev.id}')">🗑</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function saveEventosLocal(){
-  try{localStorage.setItem('crm_eventos',JSON.stringify(eventosC));}catch(_){}
-}
-function loadEventosLocal(){
-  try{const d=localStorage.getItem('crm_eventos');if(d)eventosC=JSON.parse(d);}catch(_){}
-}
-
 function doLogin(){
   const val=document.getElementById('login-pass').value;
   if(val==='tifanyfernanda'){
@@ -2510,6 +2265,50 @@ function doLogin(){
 }
 
 // Loads after login
+
+/* ── Tel helpers ── */
+function initTelList(telStr){
+  const list=document.getElementById('f-tel-list');
+  if(!list)return;
+  const nums=telStr?telStr.split('/').map(t=>t.trim()).filter(Boolean):[''];
+  list.innerHTML=nums.map(n=>`<div class="tel-item"><input type="tel" value="${n}" placeholder="Ej: 999 123 456"><button type="button" class="tel-del" onclick="this.parentElement.remove()">×</button></div>`).join('');
+}
+
+function addTelRow(){
+  const list=document.getElementById('f-tel-list');
+  if(!list)return;
+  const div=document.createElement('div');
+  div.className='tel-item';
+  div.innerHTML=`<input type="tel" placeholder="Ej: 999 123 456"><button type="button" class="tel-del" onclick="this.parentElement.remove()">×</button>`;
+  list.appendChild(div);
+  div.querySelector('input').focus();
+}
+
+function getTelValue(){
+  const rows=document.querySelectorAll('#f-tel-list .tel-item input');
+  return Array.from(rows).map(i=>i.value.trim()).filter(Boolean).join(' / ');
+}
+
+/* ── TH column filter menus ── */
+function buildThMenus(){
+  Object.keys(TH_OPTIONS_MAP).forEach(key=>{
+    const menu=document.getElementById('thfm-'+key);
+    if(!menu)return;
+    const active=TH_FILTERS[key];
+    menu.innerHTML=`<div class="th-filter-opt${!active?' selected':''}" onclick="setThFilter('${key}',null)"><span class="opt-check">${!active?'✓':''}</span>Todos</div>`
+      +TH_OPTIONS_MAP[key].map(v=>`<div class="th-filter-opt${active===v?' selected':''}" onclick="setThFilter('${key}','${v.replace(/'/g,"\\'")}')"><span class="opt-check">${active===v?'✓':''}</span>${v}</div>`).join('');
+  });
+}
+
+/* ── Eventos local persistence ── */
+function saveEventosLocal(){
+  try{localStorage.setItem('crm_eventos',JSON.stringify(eventosC));}catch(_){}
+}
+function loadEventosLocal(){
+  try{const d=localStorage.getItem('crm_eventos');if(d)eventosC=JSON.parse(d);}catch(_){}
+}
+
+/* ── Apps Script: saveEvento / deleteEvento / getEventos handlers (GAS side not yet wired, graceful fallback) ── */
 </script>
 </body>
 </html>
