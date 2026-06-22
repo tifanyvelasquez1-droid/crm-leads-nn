@@ -794,6 +794,24 @@ async function apiCall(body){
   return r.json();
 }
 
+function filterAll(){
+  const q=(document.getElementById('q')||{value:''}).value.toLowerCase();
+  const sv=(document.getElementById('f-sem')||{value:''}).value;
+  const se=(document.getElementById('f-etapa')||{value:''}).value;
+  const thEv=TH_FILTERS.evento;
+  const thKam=TH_FILTERS.kam;
+  const thSt=TH_FILTERS.status;
+  filtered=leads.filter(l=>{
+    const m=!q||(l.razon+' '+l.contacto+' '+l.apellido+' '+l.tel+' '+(l.status||'')+' '+(l.evento||'')+' '+(l.kam||'')+' '+(l.nombre_lead||'')).toLowerCase().includes(q);
+    const st=!sv||(sv==='g'?l.status==='ABIERTO':sv==='o'?l.status==='HOLD':l.status==='REJECT');
+    const thEvM=!thEv||l.evento===thEv;
+    const thKamM=!thKam||l.kam===thKam;
+    const thStM=!thSt||l.status===thSt;
+    return m&&st&&(!se||l.etapa===se)&&thEvM&&thKamM&&thStM;
+  });
+  if(tab==='tabla')renderTabla();else if(tab==='kanban')renderKanban();
+}
+
 async function loadLeads(){
   loading(true);
   try{
