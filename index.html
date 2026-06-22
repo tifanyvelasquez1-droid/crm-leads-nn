@@ -681,6 +681,31 @@ tbody tr:hover td{background:#f0f4ff;transition:background .1s}
 
 <div class="toast" id="toast"></div>
 
+<!-- MODAL DETALLE EVENTO -->
+<div id="mo-evento-detail" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:700;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);width:96%;max-width:700px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div class="mo-hdr">
+      <div style="flex:1"><div class="mo-title" id="ev-detail-title">Evento</div><div style="font-size:11px;color:var(--text3)" id="ev-detail-sub"></div></div>
+      <button class="btn btn-blue" style="margin-right:8px" onclick="openAddLeadToEvento()">+ Agregar Lead</button>
+      <button class="mo-x" onclick="closeEventoDetail()">&#x2715;</button>
+    </div>
+    <div style="padding:10px 18px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--border)" id="ev-detail-stats"></div>
+    <div id="ev-detail-leads" style="min-height:100px"></div>
+  </div>
+</div>
+
+<!-- MODAL AGREGAR LEAD A EVENTO -->
+<div id="mo-add-lead-evento" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:800;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);width:92%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div class="mo-hdr"><div class="mo-title">➕ Agregar Lead al Evento</div><button class="mo-x" onclick="closeAddLeadEvento()">&#x2715;</button></div>
+    <div style="padding:12px 18px">
+      <input id="ev-search-lead" placeholder="Buscar empresa o contacto..." style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);font-size:12px;font-family:inherit;margin-bottom:10px" oninput="renderAddLeadList()">
+      <div id="ev-add-lead-list" style="display:flex;flex-direction:column;gap:6px;max-height:400px;overflow-y:auto"></div>
+    </div>
+    <div class="mo-ftr"><button class="btn" onclick="closeAddLeadEvento()">Cerrar</button></div>
+  </div>
+</div>
+
 <!-- MODAL REJECT REASON -->
 <div id="mo-reject" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:700;align-items:center;justify-content:center">
   <div style="background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);padding:24px 26px;width:92%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.2)">
@@ -2165,6 +2190,179 @@ function deleteCampanaConfirm(id){
 }
 
 
+
+/* ══ EVENTOS CORPORATIVOS — renderEventos + lead linking ══ */
+
+const EV_ESTADOS=['Invitado','Confirmó','Asistió','Rechazó','No asistió'];
+const EV_ESTADO_COLORS={
+  'Invitado':{bg:'#deebff',tx:'#0747a6'},
+  'Confirmó':{bg:'#e3fcf0',tx:'#006644'},
+  'Asistió':{bg:'#00875a',tx:'#fff'},
+  'Rechazó':{bg:'#ffecea',tx:'#9e1b00'},
+  'No asistió':{bg:'#eceff1',tx:'#546e7a'}
+};
+
+function renderEventos(){
+  const cont=document.getElementById('eventos-list');
+  if(!cont)return;
+  if(!eventosC.length){
+    cont.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3);grid-column:1/-1;font-size:13px">No hay eventos. Crea el primero con "+ Nuevo Evento".</div>';
+    return;
+  }
+  cont.innerHTML=eventosC.map(ev=>{
+    const leadsEv=leads.filter(l=>(l.eventos_c||[]).some(e=>e.id===ev.id));
+    const stats={};
+    EV_ESTADOS.forEach(s=>{stats[s]=leadsEv.filter(l=>(l.eventos_c||[]).find(e=>e.id===ev.id&&e.estado===s)).length;});
+    return`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.04)">
+      <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px">
+        <div style="flex:1"><div style="font-size:13px;font-weight:700">🎯 ${ev.nombre}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">${ev.fecha?'📅 '+fmt(ev.fecha):''} ${ev.lugar?'· 📍 '+ev.lugar:''} ${ev.responsable?'· '+ev.responsable:''}</div></div>
+        <span style="background:var(--gbg);color:var(--gtxt);border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700">${leadsEv.length} leads</span>
+      </div>
+      ${ev.descripcion?`<div style="font-size:11px;color:var(--text2);margin-bottom:10px;line-height:1.5">${ev.descripcion}</div>`:''}
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px">
+        ${EV_ESTADOS.map(s=>{const ec2=EV_ESTADO_COLORS[s];return`<span style="background:${ec2.bg};color:${ec2.tx};padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">${s}: ${stats[s]||0}</span>`;}).join('')}
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-blue" style="font-size:11px;height:28px" onclick="openEventoDetail('${ev.id}')">👁 Ver Leads</button>
+        <button class="ibt" onclick="editEvento('${ev.id}')">✏️ Editar</button>
+        <button class="del-btn" onclick="deleteEventoConfirm('${ev.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── Detalle evento: lista de leads vinculados ── */
+let _detailEventoId=null;
+function openEventoDetail(id){
+  _detailEventoId=id;
+  const ev=eventosC.find(x=>x.id===id);if(!ev)return;
+  document.getElementById('ev-detail-title').textContent='🎯 '+ev.nombre;
+  document.getElementById('ev-detail-sub').textContent=(ev.fecha?fmt(ev.fecha)+' ':'')+( ev.lugar?'· '+ev.lugar:'');
+  renderEventoDetailLeads();
+  document.getElementById('mo-evento-detail').style.display='flex';
+}
+function closeEventoDetail(){
+  document.getElementById('mo-evento-detail').style.display='none';
+  _detailEventoId=null;
+}
+function renderEventoDetailLeads(){
+  const id=_detailEventoId;
+  const ev=eventosC.find(x=>x.id===id);if(!ev)return;
+  const leadsEv=leads.filter(l=>(l.eventos_c||[]).some(e=>e.id===id));
+  // Stats bar
+  const stats={};
+  EV_ESTADOS.forEach(s=>{stats[s]=leadsEv.filter(l=>(l.eventos_c||[]).find(e=>e.id===id&&e.estado===s)).length;});
+  document.getElementById('ev-detail-stats').innerHTML=EV_ESTADOS.map(s=>{
+    const ec2=EV_ESTADO_COLORS[s];
+    return`<span style="background:${ec2.bg};color:${ec2.tx};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">${s}: ${stats[s]||0}</span>`;
+  }).join('');
+  // Leads list
+  const cont=document.getElementById('ev-detail-leads');
+  if(!leadsEv.length){
+    cont.innerHTML='<div style="padding:30px;text-align:center;color:var(--text3);font-size:12px">Ningún lead agregado aún. Usa "+ Agregar Lead".</div>';
+    return;
+  }
+  cont.innerHTML=leadsEv.map(l=>{
+    const entry=(l.eventos_c||[]).find(e=>e.id===id)||{};
+    const ec2=EV_ESTADO_COLORS[entry.estado||'Invitado']||EV_ESTADO_COLORS['Invitado'];
+    return`<div style="display:flex;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid var(--border)">
+      <span class="led ${sC(l.sem)}"></span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:700">${l.razon}</div>
+        <div style="font-size:10px;color:var(--text3)">${l.contacto||''} ${l.cargo?'· '+l.cargo:''}</div>
+      </div>
+      <select onchange="setLeadEventoEstado('${l.id}','${id}',this.value)" style="padding:4px 8px;border:1px solid var(--border2);border-radius:20px;font-size:11px;font-weight:600;background:${ec2.bg};color:${ec2.tx};font-family:inherit;cursor:pointer">
+        ${EV_ESTADOS.map(s=>`<option value="${s}" ${(entry.estado||'Invitado')===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+      <button class="del-btn" style="padding:2px 8px;font-size:10px" onclick="removeLeadFromEvento('${l.id}','${id}')">× Quitar</button>
+    </div>`;
+  }).join('');
+}
+
+async function setLeadEventoEstado(leadId,eventoId,estado){
+  const l=leads.find(x=>String(x.id)===String(leadId));if(!l)return;
+  if(!Array.isArray(l.eventos_c))l.eventos_c=[];
+  const idx=l.eventos_c.findIndex(e=>e.id===eventoId);
+  if(idx>-1)l.eventos_c[idx].estado=estado;
+  else l.eventos_c.push({id:eventoId,estado});
+  await saveLead(l);
+  renderEventoDetailLeads();
+  toast('✓ Estado actualizado','ok');
+}
+
+async function removeLeadFromEvento(leadId,eventoId){
+  const l=leads.find(x=>String(x.id)===String(leadId));if(!l)return;
+  l.eventos_c=(l.eventos_c||[]).filter(e=>e.id!==eventoId);
+  await saveLead(l);
+  renderEventoDetailLeads();
+  renderEventos();
+  toast('Lead quitado del evento','ok');
+}
+
+/* ── Agregar lead a evento ── */
+function openAddLeadToEvento(){
+  document.getElementById('ev-search-lead').value='';
+  renderAddLeadList();
+  document.getElementById('mo-add-lead-evento').style.display='flex';
+}
+function closeAddLeadEvento(){
+  document.getElementById('mo-add-lead-evento').style.display='none';
+}
+function renderAddLeadList(){
+  const q=(document.getElementById('ev-search-lead')?.value||'').toLowerCase();
+  const id=_detailEventoId;
+  const already=new Set(leads.filter(l=>(l.eventos_c||[]).some(e=>e.id===id)).map(l=>String(l.id)));
+  const list=leads.filter(l=>{
+    if(already.has(String(l.id)))return false;
+    return !q||(l.razon+' '+l.contacto+' '+l.apellido).toLowerCase().includes(q);
+  });
+  const cont=document.getElementById('ev-add-lead-list');
+  if(!cont)return;
+  if(!list.length){cont.innerHTML='<div style="text-align:center;color:var(--text3);padding:20px;font-size:12px">Sin resultados</div>';return;}
+  cont.innerHTML=list.map(l=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface)">
+      <span class="led ${sC(l.sem)}"></span>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:700">${l.razon}</div>
+        <div style="font-size:10px;color:var(--text3)">${l.contacto||''} ${l.cargo?'· '+l.cargo:''} · ${l.etapa}</div>
+      </div>
+      <button class="btn btn-blue" style="font-size:11px;height:28px" onclick="addLeadToEvento('${l.id}')">+ Agregar</button>
+    </div>`).join('');
+}
+async function addLeadToEvento(leadId){
+  const l=leads.find(x=>String(x.id)===String(leadId));if(!l)return;
+  if(!Array.isArray(l.eventos_c))l.eventos_c=[];
+  if(!l.eventos_c.find(e=>e.id===_detailEventoId)){
+    l.eventos_c.push({id:_detailEventoId,estado:'Invitado'});
+    await saveLead(l);
+  }
+  renderAddLeadList();
+  renderEventoDetailLeads();
+  renderEventos();
+  toast('✓ Lead agregado al evento','ok');
+}
+
+/* ── Agregar evento desde modal de Lead (en edición) ── */
+function buildEventoSelectorInModal(l){
+  if(!eventosC.length)return'';
+  const linked=(l.eventos_c||[]).map(e=>e.id);
+  return`<div class="sec">Eventos Corporativos</div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      ${eventosC.map(ev=>{
+        const entry=(l.eventos_c||[]).find(e=>e.id===ev.id);
+        const checked=!!entry;
+        const ec2=EV_ESTADO_COLORS[entry?.estado||'Invitado'];
+        return`<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--s2)">
+          <input type="checkbox" id="evch-${ev.id}" ${checked?'checked':''} style="width:15px;height:15px;cursor:pointer;accent-color:var(--blue)">
+          <label for="evch-${ev.id}" style="font-size:12px;font-weight:600;flex:1;cursor:pointer">🎯 ${ev.nombre}${ev.fecha?' · '+fmt(ev.fecha):''}</label>
+          ${checked?`<select id="evst-${ev.id}" style="padding:3px 8px;border:1px solid var(--border2);border-radius:20px;font-size:11px;font-weight:600;background:${ec2.bg};color:${ec2.tx};font-family:inherit">
+            ${EV_ESTADOS.map(s=>`<option ${(entry?.estado||'Invitado')===s?'selected':''}>${s}</option>`).join('')}
+          </select>`:''}
+        </div>`;
+      }).join('')}
+    </div>`;
+}
 
 /* ══ EVENTOS CORPORATIVOS — Complete CRUD ══ */
 function openNewEvento(){
